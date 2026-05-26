@@ -66,7 +66,6 @@ export default function LoginPage({ onLoginSuccess }) {
         // Construct user profile data for client-side UI consumption
         const userData = {
           username: username.trim(),
-          password: password.trim(),
           firstName: firstName,
           lastName: lastName,
           email: username.trim().includes('@') ? username.trim() : `${username.trim()}@company.com`,
@@ -223,17 +222,6 @@ export default function LoginPage({ onLoginSuccess }) {
             )}
           </button>
         </form>
-
-        {/* Server Credentials Tip Box */}
-        <div className="mt-8 p-4 bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100/50 dark:border-purple-900/30 rounded-2xl text-xs text-purple-800 dark:text-purple-300">
-          <p className="font-semibold mb-1 flex items-center gap-1.5">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.063.854l-.041.02a.75.75 0 11-1.063-.854zm0 0v1.5m2.25-3h-3.75a.75.75 0 000 1.5h.75v3h-.75a.75.75 0 000 1.5h3a.75.75 0 000-1.5h-.75V9.75h.75a.75.75 0 000-1.5z"></path>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 21.75a9.75 9.75 0 110-19.5 9.75 9.75 0 010 19.5z"></path>
-            </svg>
-            Server Credentials
-          </p>
-        </div>
 
       </div>
     </div>

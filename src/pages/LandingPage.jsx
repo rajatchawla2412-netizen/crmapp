@@ -40,11 +40,16 @@ export default function LandingPage({ user, onLogout }) {
             })
           })
 
+          if (response.status === 401 || response.status === 403) {
+            // Session expired or unauthorized, trigger logout
+            onLogout()
+            return null
+          }
+
           if (!response.ok) return null
 
           const data = await response.json()
           
-          // Check if data represents a valid partner with at least a name
           if (data && (data.name || data.display_name)) {
             return {
               id,
@@ -95,7 +100,7 @@ export default function LandingPage({ user, onLogout }) {
     } finally {
       setIsLoading(false)
     }
-  }, [nextId, isLoading, hasMore, user])
+  }, [nextId, isLoading, hasMore, user, onLogout])
 
   // Observer callback for scroll detection
   const lastPartnerElementRef = useCallback(node => {
@@ -203,7 +208,7 @@ export default function LandingPage({ user, onLogout }) {
               </p>
             </div>
             <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 px-5 py-4 rounded-2xl flex flex-col">
-              <span className="text-[10px] text-zinc-400 uppercase tracking-widest font-semibold">Active Database</span>
+              <span className="text-[10px] text-zinc-450 uppercase tracking-widest font-semibold">Active Database</span>
               <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-0.5">{user?.db || 'vendor_booking'}</span>
             </div>
           </div>
@@ -228,14 +233,14 @@ export default function LandingPage({ user, onLogout }) {
                       <h3 className="font-semibold text-zinc-950 dark:text-zinc-50 leading-snug">
                         {partner.name}
                       </h3>
-                      <span className="text-[10px] font-mono text-zinc-400 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-mono text-zinc-450 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 px-2 py-0.5 rounded-full">
                         ID: {partner.id}
                       </span>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 text-zinc-650 dark:text-zinc-400">
+                    <div className="flex items-center gap-3 text-zinc-600 dark:text-zinc-400">
                       <svg className="w-4 h-4 flex-shrink-0 text-zinc-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
                       </svg>
@@ -244,7 +249,7 @@ export default function LandingPage({ user, onLogout }) {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3 text-zinc-650 dark:text-zinc-400">
+                    <div className="flex items-center gap-3 text-zinc-600 dark:text-zinc-400">
                       <svg className="w-4 h-4 flex-shrink-0 text-zinc-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-2.824-1.802-5.19-4.168-7-7l1.293-.97c.362-.271.528-.733.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
                       </svg>
@@ -266,7 +271,7 @@ export default function LandingPage({ user, onLogout }) {
             >
               <div>
                 <div className="flex items-center gap-4 mb-5">
-                  <div className="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-800 animate-pulse"></div>
+                  <div className="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-800"></div>
                   <div className="flex-1 space-y-2">
                     <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-2/3"></div>
                     <div className="h-3 bg-zinc-250 dark:bg-zinc-850 rounded w-1/3"></div>
@@ -289,7 +294,7 @@ export default function LandingPage({ user, onLogout }) {
 
         {/* End of results message */}
         {!hasMore && partners.length > 0 && (
-          <div className="text-center text-xs text-zinc-400 dark:text-zinc-500 mt-12 py-6 border-t border-zinc-200/60 dark:border-zinc-800/60">
+          <div className="text-center text-xs text-zinc-400 dark:text-zinc-550 mt-12 py-6 border-t border-zinc-200/60 dark:border-zinc-800/60">
             No more partners to load. All directory items loaded.
           </div>
         )}
