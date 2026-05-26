@@ -28,7 +28,7 @@ export default function LandingPage({ user, onLogout }) {
         try {
           const url = `${API_URL}?model=res.partner&id=${id}`
           const response = await fetch(url, {
-            method: 'GET',
+            method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'login': login,
@@ -48,8 +48,21 @@ export default function LandingPage({ user, onLogout }) {
 
           if (!response.ok) return null
 
-          const data = await response.json()
-
+          let data = {}
+          const contentType = response.headers.get('content-type')
+          if (contentType && contentType.includes('application/json')) {
+            data = await response.json()
+          } else {
+            const text = await response.text()
+            if (text) {
+              try {
+                data = JSON.parse(text)
+              } catch (e) {
+                data = { message: text }
+              }
+            }
+          }
+          
           if (data && (data.name || data.display_name)) {
             return {
               id,
