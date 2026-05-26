@@ -3,14 +3,14 @@ import React, { useState } from 'react'
 export default function LoginPage({ onLoginSuccess }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [db, setDb] = useState('sep_db')
+  const db = 'sep_db'
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
 
   const handleLogin = async (e) => {
     e.preventDefault()
-    if (!username.trim() || !password.trim() || !db.trim()) {
+    if (!username.trim() || !password.trim()) {
       setMessage({ type: 'error', text: 'Please fill in all fields.' })
       return
     }
@@ -128,29 +128,6 @@ export default function LoginPage({ onLoginSuccess }) {
         {/* Login Form */}
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label htmlFor="db" className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
-              Database
-            </label>
-            <div className="relative flex items-center">
-              <span className="absolute left-4 text-zinc-400 dark:text-zinc-500">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.128 16.556 18 12 18s-8.25-1.872-8.25-4.125v-3.75" />
-                </svg>
-              </span>
-              <input
-                type="text"
-                id="db"
-                value={db}
-                onChange={(e) => setDb(e.target.value)}
-                placeholder="e.g. sep_db"
-                disabled={isLoading}
-                className="w-full pl-11 pr-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:focus:border-purple-400 disabled:opacity-50 transition-all font-medium text-sm"
-                required
-              />
-            </div>
-          </div>
-
-          <div>
             <label htmlFor="username" className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
               Login or Email
             </label>
@@ -216,7 +193,7 @@ export default function LoginPage({ onLoginSuccess }) {
 
           <button
             type="submit"
-            disabled={isLoading || !db || !username || !password}
+            disabled={isLoading || !username || !password}
             className="w-full py-3 bg-purple-600 dark:bg-purple-500 hover:bg-purple-700 dark:hover:bg-purple-600 text-white font-medium rounded-xl transition-all shadow-md shadow-purple-500/10 hover:shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
           >
             {isLoading ? (
