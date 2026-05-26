@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 export default function LoginPage({ onLoginSuccess }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const db = 'sep_db'
+  const db = 'vendor_booking'
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
@@ -19,9 +19,9 @@ export default function LoginPage({ onLoginSuccess }) {
     setMessage({ type: '', text: '' })
 
     try {
-      // In development, proxy through /api to avoid CORS issues and allow secure cookie storage.
-      // In production, can be overridden by setting VITE_API_URL.
-      const API_URL = import.meta.env.VITE_API_URL || '/api'
+
+      // In development, proxy through /api/odoo_connect to avoid CORS/Cookie restrictions.
+      const API_URL = import.meta.env.DEV ? '/api/odoo_connect' : 'http://192.168.29.111:8019/odoo_connect'
 
       const response = await fetch(API_URL, {
         method: 'GET',
@@ -48,17 +48,28 @@ export default function LoginPage({ onLoginSuccess }) {
         }
       }
 
-      if (response.ok) {
+      if (data.Status === "auth successful") {
         setMessage({ type: 'success', text: 'Logged in successfully!' })
-        
+
+        // Store the API key in localStorage for future requests
+        if (data['api-key']) {
+          localStorage.setItem('api-key', data['api-key'])
+        }
+
+        const fullName = data.User || username.trim()
+        const nameParts = fullName.split(' ')
+        const firstName = nameParts[0]
+        const lastName = nameParts.slice(1).join(' ')
+
         // Construct user profile data for client-side UI consumption
         const userData = {
           username: username.trim(),
-          firstName: username.trim().split('@')[0],
-          lastName: '',
+          firstName: firstName,
+          lastName: lastName,
           email: username.trim().includes('@') ? username.trim() : `${username.trim()}@company.com`,
           db: db.trim(),
-          image: `https://api.dicebear.com/7.x/initials/svg?seed=${username.trim()}`,
+          image: `https://api.dicebear.com/7.x/initials/svg?seed=${fullName}`,
+          apiKey: data['api-key'],
           ...data
         }
 
@@ -68,15 +79,15 @@ export default function LoginPage({ onLoginSuccess }) {
           }
         }, 800)
       } else {
-        setMessage({ 
-          type: 'error', 
-          text: data.message || 'Invalid credentials or login failed.' 
+        setMessage({
+          type: 'error',
+          text: data.message || 'Invalid credentials or login failed.'
         })
       }
     } catch (err) {
-      setMessage({ 
-        type: 'error', 
-        text: 'Network error. Please check your connection and try again.' 
+      setMessage({
+        type: 'error',
+        text: 'Network error. Please check your connection and try again.'
       })
     } finally {
       setIsLoading(false)
@@ -220,8 +231,8 @@ export default function LoginPage({ onLoginSuccess }) {
             Server Credentials
           </p>
           <p className="leading-relaxed">
-            Database: <code className="font-mono bg-purple-100/80 dark:bg-purple-900/50 px-1 py-0.5 rounded text-purple-900 dark:text-purple-200">sep_db</code><br/>
-            Login: <code className="font-mono bg-purple-100/80 dark:bg-purple-900/50 px-1 py-0.5 rounded text-purple-900 dark:text-purple-200">admin</code><br/>
+            Database: <code className="font-mono bg-purple-100/80 dark:bg-purple-900/50 px-1 py-0.5 rounded text-purple-900 dark:text-purple-200">vendor_booking</code><br />
+            Login: <code className="font-mono bg-purple-100/80 dark:bg-purple-900/50 px-1 py-0.5 rounded text-purple-900 dark:text-purple-200">admin</code><br />
             Password: <code className="font-mono bg-purple-100/80 dark:bg-purple-900/50 px-1 py-0.5 rounded text-purple-900 dark:text-purple-200">admin</code>
           </p>
         </div>
