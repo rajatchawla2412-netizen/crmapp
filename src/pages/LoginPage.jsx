@@ -66,6 +66,7 @@ export default function LoginPage({ onLoginSuccess }) {
         // Construct user profile data for client-side UI consumption
         const userData = {
           username: username.trim(),
+          password: password.trim(),
           firstName: firstName,
           lastName: lastName,
           email: username.trim().includes('@') ? username.trim() : `${username.trim()}@company.com`,
@@ -231,11 +232,6 @@ export default function LoginPage({ onLoginSuccess }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 21.75a9.75 9.75 0 110-19.5 9.75 9.75 0 010 19.5z"></path>
             </svg>
             Server Credentials
-          </p>
-          <p className="leading-relaxed">
-            Database: <code className="font-mono bg-purple-100/80 dark:bg-purple-900/50 px-1 py-0.5 rounded text-purple-900 dark:text-purple-200">vendor_booking</code><br />
-            Login: <code className="font-mono bg-purple-100/80 dark:bg-purple-900/50 px-1 py-0.5 rounded text-purple-900 dark:text-purple-200">admin</code><br />
-            Password: <code className="font-mono bg-purple-100/80 dark:bg-purple-900/50 px-1 py-0.5 rounded text-purple-900 dark:text-purple-200">admin</code>
           </p>
         </div>
 

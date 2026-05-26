@@ -1,64 +1,144 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 
 export default function LandingPage({ user, onLogout }) {
-  const [activeTab, setActiveTab] = useState('Overview')
+  const [partners, setPartners] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [nextId, setNextId] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [stats, setStats] = useState({ totalLoaded: 0 })
+  const observer = useRef()
 
-  // Mock CRM Metrics
-  const metrics = [
-    { 
-      name: 'Total Leads', 
-      value: '1,482', 
-      change: '+14.3%', 
-      trend: 'up',
-      icon: (
-        <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.109A2.25 2.25 0 0112.75 21.5h-1.5a2.25 2.25 0 01-2.25-2.263V19.13m4.121-3.077A9.38 9.38 0 0012 15.75c-1.39 0-2.68.303-3.84.845m8.59-4.845a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM5.25 5.25a3 3 0 11-6 0 3 3 0 016 0zM6 10.5a9.75 9.75 0 00-3.033.486 4.125 4.125 0 00-3 3.861 8.874 8.874 0 0010.066-.3m-.066-4.048A9.75 9.75 0 008.966 10.5m-3.82 4.156a9.07 9.07 0 01-2.735-1.077" />
-        </svg>
-      )
-    },
-    { 
-      name: 'Conversion Rate', 
-      value: '22.8%', 
-      change: '+3.2%', 
-      trend: 'up',
-      icon: (
-        <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
-        </svg>
-      )
-    },
-    { 
-      name: 'Active Deals', 
-      value: '$48,250', 
-      change: '+8.1%', 
-      trend: 'up',
-      icon: (
-        <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
-    },
-    { 
-      name: 'System Response', 
-      value: '99.98%', 
-      change: 'Stable', 
-      trend: 'stable',
-      icon: (
-        <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-        </svg>
-      )
+  const loadMorePartners = useCallback(async () => {
+    if (isLoading || !hasMore) return
+    setIsLoading(true)
+
+    try {
+      const login = user?.username || 'admin'
+      const password = user?.password || 'admin'
+      const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
+
+      const API_URL = import.meta.env.DEV 
+        ? '/api/send_request' 
+        : 'http://192.168.29.111:8019/send_request'
+
+      // Fetch 10 IDs in parallel
+      const idsToFetch = Array.from({ length: 10 }, (_, i) => nextId + i)
+
+      const fetchPromises = idsToFetch.map(async (id) => {
+        try {
+          const url = `${API_URL}?model=res.partner&id=${id}`
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'login': login,
+              'password': password,
+              'api-key': apiKey
+            },
+            body: JSON.stringify({
+              fields: ["name", "email", "phone"]
+            })
+          })
+
+          if (!response.ok) return null
+
+          const data = await response.json()
+          
+          // Check if data represents a valid partner with at least a name
+          if (data && (data.name || data.display_name)) {
+            return {
+              id,
+              name: data.name || data.display_name,
+              email: data.email || 'No email',
+              phone: data.phone || 'No phone'
+            }
+          }
+          
+          if (Array.isArray(data) && data.length > 0 && (data[0].name || data[0].display_name)) {
+            const p = data[0]
+            return {
+              id,
+              name: p.name || p.display_name,
+              email: p.email || 'No email',
+              phone: p.phone || 'No phone'
+            }
+          }
+
+          return null
+        } catch (e) {
+          console.error(`Failed to fetch partner with ID ${id}:`, e)
+          return null
+        }
+      })
+
+      const results = await Promise.all(fetchPromises)
+      const validPartners = results.filter(p => p !== null)
+
+      if (validPartners.length > 0) {
+        setPartners(prev => {
+          const existingIds = new Set(prev.map(p => p.id))
+          const uniqueNew = validPartners.filter(p => !existingIds.has(p.id))
+          const merged = [...prev, ...uniqueNew]
+          setStats({ totalLoaded: merged.length })
+          return merged
+        })
+      }
+
+      setNextId(prev => prev + 10)
+
+      // Stop fetching if we check up to a limit and find no more partners
+      if (validPartners.length === 0 && nextId > 200) {
+        setHasMore(false)
+      }
+    } catch (error) {
+      console.error('Error fetching partners batch:', error)
+    } finally {
+      setIsLoading(false)
     }
-  ]
+  }, [nextId, isLoading, hasMore, user])
 
-  // Mock CRM Recent Activity
-  const activities = [
-    { id: 1, action: 'Lead verified successfully', target: 'John Doe', time: '2 mins ago', type: 'success' },
-    { id: 2, action: 'New opportunity created', target: 'Acme Corp Deal', time: '1 hour ago', type: 'info' },
-    { id: 3, action: 'Follow-up scheduled with', target: 'Sarah Jenkins', time: '3 hours ago', type: 'pending' },
-    { id: 4, action: 'Auth session established for', target: user ? `@${user.username}` : 'operator', time: 'Just now', type: 'auth' }
-  ]
+  // Observer callback for scroll detection
+  const lastPartnerElementRef = useCallback(node => {
+    if (isLoading) return
+    if (observer.current) observer.current.disconnect()
+    
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadMorePartners()
+      }
+    }, { threshold: 0.1 })
+    
+    if (node) observer.current.observe(node)
+  }, [isLoading, hasMore, loadMorePartners])
+
+  // Initial load
+  useEffect(() => {
+    loadMorePartners()
+  }, [])
+
+  // Helper to generate initials avatar color class
+  const getAvatarGradient = (name) => {
+    const gradients = [
+      'from-purple-500 to-indigo-500',
+      'from-blue-500 to-cyan-500',
+      'from-emerald-500 to-teal-500',
+      'from-pink-500 to-rose-500',
+      'from-amber-500 to-orange-500',
+      'from-violet-500 to-fuchsia-500'
+    ]
+    const charCodeSum = name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0)
+    return gradients[charCodeSum % gradients.length]
+  }
+
+  // Helper to get initials
+  const getInitials = (name) => {
+    if (!name) return '?'
+    const parts = name.trim().split(/\s+/)
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase()
+    }
+    return name.slice(0, 2).toUpperCase()
+  }
 
   return (
     <div className="flex-1 min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 transition-colors duration-300 flex flex-col">
@@ -71,22 +151,6 @@ export default function LandingPage({ user, onLogout }) {
           <span className="font-semibold text-lg tracking-tight bg-gradient-to-r from-zinc-900 to-zinc-600 dark:from-zinc-100 dark:to-zinc-400 bg-clip-text text-transparent">
             crmapp
           </span>
-        </div>
-
-        <div className="hidden md:flex items-center gap-1">
-          {['Overview', 'Leads', 'Deals', 'Analytics'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeTab === tab
-                  ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400'
-                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
         </div>
 
         <div className="flex items-center gap-4">
@@ -121,167 +185,135 @@ export default function LandingPage({ user, onLogout }) {
       </nav>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-10 md:py-12 space-y-10">
-        
-        {/* Welcome Banner */}
-        <section className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-6 md:p-8 shadow-xl shadow-zinc-200/20 dark:shadow-none relative overflow-hidden transition-all duration-300">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-10 md:py-12 flex flex-col">
+        {/* Welcome Section */}
+        <section className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-6 md:p-8 shadow-xl shadow-zinc-200/20 dark:shadow-none relative overflow-hidden transition-all duration-300 mb-10">
           <div className="absolute -top-32 -right-32 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
           <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/20 rounded-full text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 mb-4 tracking-wide uppercase">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
-                Secure API Authenticated
+                Connected as {user?.firstName || 'Operator'}
               </div>
-              <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50 !margin-0">
-                Welcome back to your workspace
+              <h1 className="text-3xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50 margin-0">
+                Partners Directory
               </h1>
               <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-2 max-w-xl leading-relaxed">
-                Your CRM instance is active and loaded. You logged in as <span className="font-semibold text-zinc-800 dark:text-zinc-200">{user ? `${user.firstName} ${user.lastName}` : 'Operator'}</span> ({user?.email || 'no-email'}).
+                Browse list of Odoo partners loaded dynamically. Currently displaying <span className="font-semibold text-purple-600 dark:text-purple-400">{stats.totalLoaded}</span> partner cards.
               </p>
             </div>
-            
-            <div className="flex-shrink-0 flex items-center gap-3">
-              <div className="w-12 h-12 bg-purple-50 dark:bg-purple-950/40 rounded-2xl flex items-center justify-center border border-purple-100 dark:border-purple-900/30 text-purple-600 dark:text-purple-400">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-xs text-zinc-400 dark:text-zinc-500 uppercase tracking-wider font-semibold">Security State</p>
-                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Enforced HTTPS</p>
-              </div>
+            <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 px-5 py-4 rounded-2xl flex flex-col">
+              <span className="text-[10px] text-zinc-400 uppercase tracking-widest font-semibold">Active Database</span>
+              <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-0.5">{user?.db || 'vendor_booking'}</span>
             </div>
           </div>
         </section>
 
-        {/* Metrics Grid */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {metrics.map((metric, i) => (
-            <div 
-              key={i} 
-              className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-2.5xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-                  {metric.name}
-                </span>
-                <div className="w-9 h-9 bg-zinc-50 dark:bg-zinc-950 rounded-xl flex items-center justify-center border border-zinc-100 dark:border-zinc-800/40">
-                  {metric.icon}
+        {/* Partners Grid */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {partners.map((partner, index) => {
+            const isLast = index === partners.length - 1
+            return (
+              <div 
+                key={partner.id}
+                ref={isLast ? lastPartnerElementRef : null}
+                className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center gap-4 mb-5">
+                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${getAvatarGradient(partner.name)} flex items-center justify-center text-white font-bold text-lg shadow-inner`}>
+                      {getInitials(partner.name)}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-zinc-950 dark:text-zinc-50 leading-snug">
+                        {partner.name}
+                      </h3>
+                      <span className="text-[10px] font-mono text-zinc-400 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 px-2 py-0.5 rounded-full">
+                        ID: {partner.id}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 text-zinc-650 dark:text-zinc-400">
+                      <svg className="w-4 h-4 flex-shrink-0 text-zinc-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                      </svg>
+                      <span className="text-xs truncate" title={partner.email}>
+                        {partner.email}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-zinc-650 dark:text-zinc-400">
+                      <svg className="w-4 h-4 flex-shrink-0 text-zinc-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-2.824-1.802-5.19-4.168-7-7l1.293-.97c.362-.271.528-.733.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+                      </svg>
+                      <span className="text-xs truncate">
+                        {partner.phone}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-zinc-950 dark:text-zinc-50 tracking-tight">
-                  {metric.value}
-                </span>
-                <span className={`text-xs font-medium ${
-                  metric.trend === 'up' 
-                    ? 'text-emerald-600 dark:text-emerald-400' 
-                    : 'text-zinc-400 dark:text-zinc-500'
-                }`}>
-                  {metric.change}
-                </span>
+            )
+          })}
+
+          {/* Loading Skeletons */}
+          {isLoading && Array.from({ length: 6 }).map((_, i) => (
+            <div 
+              key={`skeleton-${i}`}
+              className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-6 shadow-md flex flex-col justify-between animate-pulse"
+            >
+              <div>
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="w-12 h-12 rounded-2xl bg-zinc-200 dark:bg-zinc-800 animate-pulse"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-2/3"></div>
+                    <div className="h-3 bg-zinc-250 dark:bg-zinc-850 rounded w-1/3"></div>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                    <div className="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4"></div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+                    <div className="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-1/2"></div>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
         </section>
 
-        {/* Dashboard Panels */}
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Activity Log */}
-          <div className="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-6 md:p-8 transition-colors duration-300">
-            <h3 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50 tracking-tight mb-6">
-              Recent Activity Feed
-            </h3>
-            
-            <div className="space-y-6">
-              {activities.map((act) => (
-                <div key={act.id} className="flex items-start justify-between gap-4 py-1.5 group">
-                  <div className="flex items-start gap-4">
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 border ${
-                      act.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400' :
-                      act.type === 'info' ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900/30 text-blue-600 dark:text-blue-400' :
-                      act.type === 'auth' ? 'bg-purple-50 dark:bg-purple-950/20 border-purple-100 dark:border-purple-900/30 text-purple-600 dark:text-purple-400' :
-                      'bg-amber-50 dark:bg-amber-950/20 border-amber-100 dark:border-amber-900/30 text-amber-600 dark:text-amber-400'
-                    }`}>
-                      {act.type === 'success' && (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
-                      )}
-                      {act.type === 'info' && (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                      )}
-                      {act.type === 'pending' && (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      )}
-                      {act.type === 'auth' && (
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                        {act.action}{' '}
-                        <span className="font-semibold text-purple-600 dark:text-purple-400 group-hover:underline cursor-pointer">
-                          {act.target}
-                        </span>
-                      </p>
-                      <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-mono mt-0.5">{act.time}</p>
-                    </div>
-                  </div>
-                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800 group-hover:bg-purple-500 transition-colors mt-2"></span>
-                </div>
-              ))}
-            </div>
+        {/* End of results message */}
+        {!hasMore && partners.length > 0 && (
+          <div className="text-center text-xs text-zinc-400 dark:text-zinc-500 mt-12 py-6 border-t border-zinc-200/60 dark:border-zinc-800/60">
+            No more partners to load. All directory items loaded.
           </div>
+        )}
 
-          {/* CRM Status & Shortcuts Panel */}
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-6 md:p-8 flex flex-col justify-between transition-colors duration-300">
-            <div>
-              <h3 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50 tracking-tight mb-4">
-                CRM Agent Panel
-              </h3>
-              <p className="text-xs text-zinc-400 dark:text-zinc-500 leading-relaxed mb-6">
-                Quick actions to perform typical workflow actions within the client records workspace.
-              </p>
-
-              <div className="space-y-3">
-                <button className="w-full text-left p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 hover:border-purple-200 dark:hover:border-purple-900/30 rounded-2xl flex items-center justify-between transition-all group">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                    </div>
-                    <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">Register New Lead</span>
-                  </div>
-                  <svg className="w-3.5 h-3.5 text-zinc-400 group-hover:text-purple-500 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-                </button>
-                <button className="w-full text-left p-3.5 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 hover:border-purple-200 dark:hover:border-purple-900/30 rounded-2xl flex items-center justify-between transition-all group">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.5 4.5L21.75 7.5m-3-1.5h3v3M2.25 21.75h19.5" /></svg>
-                    </div>
-                    <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">View Sales Analytics</span>
-                  </div>
-                  <svg className="w-3.5 h-3.5 text-zinc-400 group-hover:text-purple-500 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-                </button>
-              </div>
+        {/* Empty State */}
+        {!isLoading && partners.length === 0 && (
+          <div className="flex-1 flex flex-col items-center justify-center text-center py-20 bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-8">
+            <div className="w-16 h-16 bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-900/30 rounded-2xl flex items-center justify-center text-purple-600 dark:text-purple-400 mb-4">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.109A2.25 2.25 0 0112.75 21.5h-1.5a2.25 2.25 0 01-2.25-2.263V19.13m4.121-3.077A9.38 9.38 0 0012 15.75c-1.39 0-2.68.303-3.84.845m8.59-4.845a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+              </svg>
             </div>
-
-            <div className="mt-8 pt-6 border-t border-zinc-100 dark:border-zinc-800/80 flex items-center justify-between">
-              <span className="text-[10px] text-zinc-400 dark:text-zinc-500 font-medium uppercase tracking-widest">
-                Database Node A
-              </span>
-              <span className="flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-widest">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                Connected
-              </span>
-            </div>
+            <h3 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">No Partners Found</h3>
+            <p className="text-zinc-500 dark:text-zinc-400 text-xs mt-1 max-w-[280px]">
+              Could not retrieve any partner profiles from database. Verify your Odoo API-Key or network connection.
+            </p>
           </div>
-        </section>
+        )}
       </main>
 
       {/* Footer */}
-      <footer className="w-full py-6 bg-white dark:bg-zinc-900 border-t border-zinc-200/60 dark:border-zinc-800/60 text-center text-xs text-zinc-400 dark:text-zinc-500 transition-colors duration-300 mt-auto">
+      <footer className="w-full py-6 bg-white dark:bg-zinc-900 border-t border-zinc-200/60 dark:border-zinc-800/60 text-center text-xs text-zinc-450 dark:text-zinc-550 transition-colors duration-300 mt-auto">
         <p>&copy; {new Date().getFullYear()} crmapp. All rights reserved.</p>
       </footer>
     </div>
   )
 }
-
