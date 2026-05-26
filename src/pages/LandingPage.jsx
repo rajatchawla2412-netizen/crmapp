@@ -17,8 +17,8 @@ export default function LandingPage({ user, onLogout }) {
       const password = user?.password || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
 
-      const API_URL = import.meta.env.DEV 
-        ? '/api/send_request' 
+      const API_URL = import.meta.env.DEV
+        ? '/api/send_request'
         : 'http://192.168.29.111:8019/send_request'
 
       // Fetch 10 IDs in parallel
@@ -49,7 +49,7 @@ export default function LandingPage({ user, onLogout }) {
           if (!response.ok) return null
 
           const data = await response.json()
-          
+
           if (data && (data.name || data.display_name)) {
             return {
               id,
@@ -58,7 +58,7 @@ export default function LandingPage({ user, onLogout }) {
               phone: data.phone || 'No phone'
             }
           }
-          
+
           if (Array.isArray(data) && data.length > 0 && (data[0].name || data[0].display_name)) {
             const p = data[0]
             return {
@@ -106,13 +106,13 @@ export default function LandingPage({ user, onLogout }) {
   const lastPartnerElementRef = useCallback(node => {
     if (isLoading) return
     if (observer.current) observer.current.disconnect()
-    
+
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && hasMore) {
         loadMorePartners()
       }
     }, { threshold: 0.1 })
-    
+
     if (node) observer.current.observe(node)
   }, [isLoading, hasMore, loadMorePartners])
 
@@ -161,9 +161,9 @@ export default function LandingPage({ user, onLogout }) {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3 pl-3 border-l border-zinc-200 dark:border-zinc-800">
             {user?.image && (
-              <img 
-                src={user.image} 
-                alt={user.username} 
+              <img
+                src={user.image}
+                alt={user.username}
                 className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800"
               />
             )}
@@ -175,7 +175,7 @@ export default function LandingPage({ user, onLogout }) {
                 @{user?.username || 'user'}
               </p>
             </div>
-            <button 
+            <button
               onClick={onLogout}
               className="px-3.5 py-2 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-200 dark:hover:border-rose-900/30 hover:bg-rose-50/40 dark:hover:bg-rose-950/10 rounded-xl text-xs font-medium transition-all flex items-center gap-2"
               title="Log out"
@@ -219,7 +219,7 @@ export default function LandingPage({ user, onLogout }) {
           {partners.map((partner, index) => {
             const isLast = index === partners.length - 1
             return (
-              <div 
+              <div
                 key={partner.id}
                 ref={isLast ? lastPartnerElementRef : null}
                 className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
@@ -265,7 +265,7 @@ export default function LandingPage({ user, onLogout }) {
 
           {/* Loading Skeletons */}
           {isLoading && Array.from({ length: 6 }).map((_, i) => (
-            <div 
+            <div
               key={`skeleton-${i}`}
               className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-6 shadow-md flex flex-col justify-between animate-pulse"
             >
