@@ -43,7 +43,9 @@ export default function LoginPage({ onLoginSuccess }) {
           try {
             data = JSON.parse(text)
           } catch (e) {
-            data = { message: text }
+            // Strip any HTML tags from response to output a clean user-facing error message
+            const cleanText = text.replace(/<[^>]*>/g, '').trim()
+            data = { message: cleanText }
           }
         }
       }
