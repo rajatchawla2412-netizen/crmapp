@@ -26,18 +26,15 @@ export default function LandingPage({ user, onLogout }) {
 
       const fetchPromises = idsToFetch.map(async (id) => {
         try {
-          const url = `${API_URL}?model=res.partner&id=${id}`
+          const url = `${API_URL}?model=res.partner&Id=${id}&fields=name,email,phone`
           const response = await fetch(url, {
-            method: 'POST',
+            method: 'GET',
             headers: {
               'Content-Type': 'application/json',
               'login': login,
               'password': password,
               'api-key': apiKey
-            },
-            body: JSON.stringify({
-              fields: ["name", "email", "phone"]
-            })
+            }
           })
 
           if (response.status === 401 || response.status === 403) {
@@ -62,23 +59,24 @@ export default function LandingPage({ user, onLogout }) {
               }
             }
           }
-          
-          if (data && (data.name || data.display_name)) {
-            return {
-              id,
-              name: data.name || data.display_name,
-              email: data.email || 'No email',
-              phone: data.phone || 'No phone'
+
+          let record = null
+          if (data) {
+            if (data.records && Array.isArray(data.records) && data.records.length > 0) {
+              record = data.records[0]
+            } else if (Array.isArray(data) && data.length > 0) {
+              record = data[0]
+            } else if (data.name || data.display_name) {
+              record = data
             }
           }
 
-          if (Array.isArray(data) && data.length > 0 && (data[0].name || data[0].display_name)) {
-            const p = data[0]
+          if (record && (record.name || record.display_name)) {
             return {
-              id,
-              name: p.name || p.display_name,
-              email: p.email || 'No email',
-              phone: p.phone || 'No phone'
+              id: record.id || id,
+              name: record.name || record.display_name,
+              email: record.email || 'No email',
+              phone: record.phone || 'No phone'
             }
           }
 
@@ -104,8 +102,10 @@ export default function LandingPage({ user, onLogout }) {
 
       setNextId(prev => prev + 10)
 
-      // Stop fetching if we check up to a limit and find no more partners
-      if (validPartners.length === 0 && nextId > 200) {
+      // Stop fetching if we check past the last found partner ID and find no more partners
+      const maxLoadedId = partners.length > 0 ? Math.max(...partners.map(p => p.id)) : 0
+      const checkLimit = Math.max(maxLoadedId + 20, 50)
+      if (validPartners.length === 0 && nextId > checkLimit) {
         setHasMore(false)
       }
     } catch (error) {
@@ -113,15 +113,15 @@ export default function LandingPage({ user, onLogout }) {
     } finally {
       setIsLoading(false)
     }
-  }, [nextId, isLoading, hasMore, user, onLogout])
+  }, [nextId, isLoading, hasMore, user, onLogout, partners])
 
   // Observer callback for scroll detection
   const lastPartnerElementRef = useCallback(node => {
-    if (isLoading) return
+    if (isLoading || !hasMore) return
     if (observer.current) observer.current.disconnect()
 
     observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
+      if (entries[0].isIntersecting) {
         loadMorePartners()
       }
     }, { threshold: 0.1 })
