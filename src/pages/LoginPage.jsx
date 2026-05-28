@@ -23,7 +23,7 @@ export default function LoginPage({ onLoginSuccess }) {
     try {
 
       // In development, proxy through /api/odoo_connect to avoid CORS/Cookie restrictions.
-      const API_URL =  'http://192.168.29.99:8019/odoo_connect'
+      const API_URL = '/api/odoo_connect'
 
       const response = await fetch(API_URL, {
         method: 'GET',
@@ -31,7 +31,7 @@ export default function LoginPage({ onLoginSuccess }) {
           'db': db.trim(),
           'login': username.trim(),
           'password': password.trim()
-        },  
+        },
         credentials: 'include'
       })
 
@@ -85,13 +85,13 @@ export default function LoginPage({ onLoginSuccess }) {
       } else {
         setMessage({
           type: 'error',
-          text: data.message ||"અમાન્ય ઓળખપત્રો અથવા લૉગિન નિષ્ફળ ગયું."
+          text: data.message || "અમાન્ય ઓળખપત્રો અથવા લૉગિન નિષ્ફળ ગયું."
         })
       }
     } catch (err) {
       setMessage({
         type: 'error',
-        text:"નેટવર્ક ભૂલ. કૃપા કરીને તમારું જોડાણ તપાસો અને ફરી પ્રયાસ કરો."
+        text: "નેટવર્ક ભૂલ. કૃપા કરીને તમારું જોડાણ તપાસો અને ફરી પ્રયાસ કરો."
       })
     } finally {
       setIsLoading(false)

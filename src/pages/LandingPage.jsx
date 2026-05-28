@@ -33,7 +33,7 @@ export default function LandingPage({ user, onLogout }) {
               'login': login,
               'password': password,
               'api-key': apiKey,
-              'lang':'gu'
+              'lang': 'gu'
             }
           })
 
@@ -95,7 +95,7 @@ export default function LandingPage({ user, onLogout }) {
           const existingIds = new Set(prev.map(p => p.id))
           const uniqueNew = validPartners.filter(p => !existingIds.has(p.id))
           const merged = [...prev, ...uniqueNew]
-  
+
           return merged
         })
       }
