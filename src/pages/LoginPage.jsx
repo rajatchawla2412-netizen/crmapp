@@ -33,7 +33,8 @@ export default function LoginPage({ onLoginSuccess }) {
         headers: {
           'db': db.trim(),
           'login': username.trim(),
-          'password': password.trim()
+          'password': password.trim(),
+          'lang': 'gu'
         },
         credentials: 'include'
       })
@@ -55,7 +56,7 @@ export default function LoginPage({ onLoginSuccess }) {
         }
       }
 
-      if (data.Status === "auth successful") {
+      if (data.status === "success") {
         setMessage({ type: 'success', text: "સફળતાપૂર્વક લોગ ઇન થયા!" })
 
         // Store the API key in localStorage for future requests
@@ -63,7 +64,7 @@ export default function LoginPage({ onLoginSuccess }) {
           localStorage.setItem('api-key', data['api-key'])
         }
 
-        const fullName = data.User || username.trim()
+        const fullName = data.user || username.trim()
         const nameParts = fullName.split(' ')
         const firstName = nameParts[0]
         const lastName = nameParts.slice(1).join(' ')
