@@ -5,10 +5,6 @@ export default function LandingPage({ user, onLogout }) {
   const [isLoading, setIsLoading] = useState(false)
   const [nextId, setNextId] = useState(1)
   const [hasMore, setHasMore] = useState(true)
-<<<<<<< HEAD
-=======
-  const [stats, setStats] = useState({ totalLoaded: 0 })
->>>>>>> e4a6668cb1e054322a9587aa5b86101b3a39c57a
   const observer = useRef()
 
   const loadMorePartners = useCallback(async () => {
@@ -98,11 +94,7 @@ export default function LandingPage({ user, onLogout }) {
           const existingIds = new Set(prev.map(p => p.id))
           const uniqueNew = validPartners.filter(p => !existingIds.has(p.id))
           const merged = [...prev, ...uniqueNew]
-<<<<<<< HEAD
-
-=======
-          setStats({ totalLoaded: merged.length })
->>>>>>> e4a6668cb1e054322a9587aa5b86101b3a39c57a
+  
           return merged
         })
       }
@@ -203,7 +195,7 @@ export default function LandingPage({ user, onLogout }) {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
               </svg>
-              <span>Logout</span>
+              <span>લોગઆઉટ</span>
             </button>
           </div>
         </div>
@@ -218,25 +210,15 @@ export default function LandingPage({ user, onLogout }) {
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/20 rounded-full text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 mb-4 tracking-wide uppercase">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
-                Connected as {user?.firstName || 'Operator'}
+                કનેક્ટ થયેલ: {user?.firstName || 'ઓપરેટર'}
               </div>
               <h1 className="text-3xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50 margin-0">
-                Partners Directory
+                ભાગીદારોની યાદી
               </h1>
               <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-2 max-w-xl leading-relaxed">
-<<<<<<< HEAD
-                Browse list of Odoo partners loaded dynamically.
+                ડાયનામિક રીતે લોડ થયેલા Odoo ભાગીદારોની યાદી બ્રાઉઝ કરો.
               </p>
             </div>
-=======
-                Browse list of Odoo partners loaded dynamically. Currently displaying <span className="font-semibold text-purple-600 dark:text-purple-400">{stats.totalLoaded}</span> partner cards.
-              </p>
-            </div>
-            <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 px-5 py-4 rounded-2xl flex flex-col">
-              <span className="text-[10px] text-zinc-450 uppercase tracking-widest font-semibold">Active Database</span>
-              <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-0.5">{user?.db || 'vendor_booking'}</span>
-            </div>
->>>>>>> e4a6668cb1e054322a9587aa5b86101b3a39c57a
           </div>
         </section>
 
@@ -321,7 +303,7 @@ export default function LandingPage({ user, onLogout }) {
         {/* End of results message */}
         {!hasMore && partners.length > 0 && (
           <div className="text-center text-xs text-zinc-400 dark:text-zinc-550 mt-12 py-6 border-t border-zinc-200/60 dark:border-zinc-800/60">
-            No more partners to load. All directory items loaded.
+            લોડ કરવા માટે વધુ ભાગીદારો ઉપલબ્ધ નથી. ડિરેક્ટરીના તમામ આઇટમ્સ લોડ થઈ ગયા છે.
           </div>
         )}
 
@@ -335,7 +317,7 @@ export default function LandingPage({ user, onLogout }) {
             </div>
             <h3 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">No Partners Found</h3>
             <p className="text-zinc-500 dark:text-zinc-400 text-xs mt-1 max-w-[280px]">
-              Could not retrieve any partner profiles from database. Verify your Odoo API-Key or network connection.
+              ડેટાબેઝમાંથી કોઈ ભાગીદાર પ્રોફાઇલ મેળવી શકાયા નથી. કૃપા કરીને તમારી Odoo API-Key અથવા નેટવર્ક કનેક્શન તપાસો.
             </p>
           </div>
         )}
@@ -343,7 +325,7 @@ export default function LandingPage({ user, onLogout }) {
 
       {/* Footer */}
       <footer className="w-full py-6 bg-white dark:bg-zinc-900 border-t border-zinc-200/60 dark:border-zinc-800/60 text-center text-xs text-zinc-450 dark:text-zinc-550 transition-colors duration-300 mt-auto">
-        <p>&copy; {new Date().getFullYear()} crmapp. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} crmapp. તમામ અધિકારો સુરક્ષિત છે..</p>
       </footer>
     </div>
   )

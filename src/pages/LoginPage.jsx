@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import { useTranslation } from 'react-i18next'
+
 
 export default function LoginPage({ onLoginSuccess }) {
-  const { t, i18n } = useTranslation()
+
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const db = 'vendor_booking'
@@ -13,7 +13,7 @@ export default function LoginPage({ onLoginSuccess }) {
   const handleLogin = async (e) => {
     e.preventDefault()
     if (!username.trim() || !password.trim()) {
-      setMessage({ type: 'error', text: t('fill_fields') })
+      setMessage({ type: 'error', text: "કૃપા કરીને બધા ફીલ્ડ્સ ભરો." })
       return
     }
 
@@ -47,13 +47,13 @@ export default function LoginPage({ onLoginSuccess }) {
           } catch (e) {
             // Strip any HTML tags from response to output a clean user-facing error message
             const cleanText = text.replace(/<[^>]*>/g, '').trim()
-            data = { message: cleanText }
+            data = { message: "અમાન્ય ઓળખપત્રો" }
           }
         }
       }
 
       if (data.Status === "auth successful") {
-        setMessage({ type: 'success', text: t('login_success') })
+        setMessage({ type: 'success', text: "સફળતાપૂર્વક લોગ ઇન થયા!" })
 
         // Store the API key in localStorage for future requests
         if (data['api-key']) {
@@ -85,13 +85,13 @@ export default function LoginPage({ onLoginSuccess }) {
       } else {
         setMessage({
           type: 'error',
-          text: data.message || t('login_failed')
+          text: data.message ||"અમાન્ય ઓળખપત્રો અથવા લૉગિન નિષ્ફળ ગયું."
         })
       }
     } catch (err) {
       setMessage({
         type: 'error',
-        text: t('network_error')
+        text:"નેટવર્ક ભૂલ. કૃપા કરીને તમારું જોડાણ તપાસો અને ફરી પ્રયાસ કરો."
       })
     } finally {
       setIsLoading(false)
@@ -101,19 +101,6 @@ export default function LoginPage({ onLoginSuccess }) {
   return (
     <div className="flex-1 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-zinc-50 dark:bg-zinc-950 transition-colors duration-300">
       <div className="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl shadow-xl shadow-zinc-200/40 dark:shadow-none p-8 md:p-10 relative overflow-hidden transition-all duration-300">
-
-        {/* Language Switcher */}
-        <div className="absolute top-4 right-4 z-20">
-          <button
-            onClick={() => i18n.changeLanguage(i18n.language === 'en' ? 'gu' : 'en')}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-zinc-200 dark:border-zinc-800 hover:border-purple-500/30 dark:hover:border-purple-500/30 hover:bg-purple-50/40 dark:hover:bg-rose-950/10 rounded-xl text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-purple-600 dark:hover:text-purple-400 transition-all shadow-sm cursor-pointer"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 006-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802" />
-            </svg>
-            <span>{i18n.language === 'en' ? 'ગુજરાતી' : 'English'}</span>
-          </button>
-        </div>
 
         {/* Glow Effects */}
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -127,10 +114,10 @@ export default function LoginPage({ onLoginSuccess }) {
             </svg>
           </div>
           <h2 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50 tracking-tight">
-            {t('welcome_back')}
+            {"ફરી સ્વાગત છે"}
           </h2>
           <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1 text-center max-w-[280px]">
-            {t('enter_credentials')}
+            {"તમારા CRM વર્કસ્પેસને એક્સેસ કરવા માટે તમારા ઓળખપત્રો દાખલ કરો."}
           </p>
         </div>
 
@@ -157,7 +144,7 @@ export default function LoginPage({ onLoginSuccess }) {
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
             <label htmlFor="username" className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
-              {t('login_or_email')}
+              {"લોગિન અથવા ઇમેઇલ"}
             </label>
             <div className="relative flex items-center">
               <span className="absolute left-4 text-zinc-400 dark:text-zinc-500">
@@ -170,7 +157,7 @@ export default function LoginPage({ onLoginSuccess }) {
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder={t('placeholder_username')}
+                placeholder={"દા.ત. admin"}
                 disabled={isLoading}
                 className="w-full pl-11 pr-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:focus:border-purple-400 disabled:opacity-50 transition-all font-medium text-sm"
                 required
@@ -180,7 +167,7 @@ export default function LoginPage({ onLoginSuccess }) {
 
           <div>
             <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
-              {t('password')}
+              {"પાસવર્ડ"}
             </label>
             <div className="relative flex items-center">
               <span className="absolute left-4 text-zinc-400 dark:text-zinc-500">
@@ -203,7 +190,7 @@ export default function LoginPage({ onLoginSuccess }) {
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={isLoading}
                 className="absolute right-4 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 focus:outline-none transition-colors"
-                title={showPassword ? t('hide_password') : t('show_password')}
+                title={showPassword ? "પાસવર્ડ છુપાવો" : "પાસવર્ડ બતાવો"}
               >
                 {showPassword ? (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -230,10 +217,10 @@ export default function LoginPage({ onLoginSuccess }) {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <span>{t('logging_in')}</span>
+                <span>{"સાઇન ઇન થઈ રહ્યું છે..."}</span>
               </>
             ) : (
-              <span>{t('sign_in')}</span>
+              <span>{"સાઇન ઇન કરો"}</span>
             )}
           </button>
         </form>
