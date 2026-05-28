@@ -18,7 +18,7 @@ export default function LandingPage({ user, onLogout }) {
 
       const API_URL = import.meta.env.DEV
         ? '/api/send_request'
-        : 'http://192.168.29.111:8019/send_request'
+        : 'http://192.168.29.99:8019/send_request'
 
       // Fetch 10 IDs in parallel
       const idsToFetch = Array.from({ length: 10 }, (_, i) => nextId + i)
@@ -32,7 +32,8 @@ export default function LandingPage({ user, onLogout }) {
               'Content-Type': 'application/json',
               'login': login,
               'password': password,
-              'api-key': apiKey
+              'api-key': apiKey,
+              'lang':'gu'
             }
           })
 

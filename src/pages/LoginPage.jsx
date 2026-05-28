@@ -5,7 +5,7 @@ export default function LoginPage({ onLoginSuccess }) {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const db = 'vendor_booking'
+  const db = 'rest_api19'
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
@@ -23,7 +23,7 @@ export default function LoginPage({ onLoginSuccess }) {
     try {
 
       // In development, proxy through /api/odoo_connect to avoid CORS/Cookie restrictions.
-      const API_URL = import.meta.env.DEV ? '/api/odoo_connect' : 'http://192.168.29.111:8019/odoo_connect'
+      const API_URL =  'http://192.168.29.99:8019/odoo_connect'
 
       const response = await fetch(API_URL, {
         method: 'GET',
@@ -31,7 +31,7 @@ export default function LoginPage({ onLoginSuccess }) {
           'db': db.trim(),
           'login': username.trim(),
           'password': password.trim()
-        },
+        },  
         credentials: 'include'
       })
 
