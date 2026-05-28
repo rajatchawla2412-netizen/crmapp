@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { Capacitor } from '@capacitor/core'
 
 export default function LandingPage({ user, onLogout }) {
   const [partners, setPartners] = useState([])
@@ -16,9 +17,9 @@ export default function LandingPage({ user, onLogout }) {
       const password = user?.password || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
 
-      const API_URL = import.meta.env.DEV
-        ? '/api/send_request'
-        : 'http://192.168.29.99:8019/send_request'
+      const API_URL = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
+        ? 'http://192.168.29.99:8019/send_request'
+        : '/api/send_request'
 
       // Fetch 10 IDs in parallel
       const idsToFetch = Array.from({ length: 10 }, (_, i) => nextId + i)

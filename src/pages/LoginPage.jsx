@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Capacitor } from '@capacitor/core'
 
 
 export default function LoginPage({ onLoginSuccess }) {
@@ -22,8 +23,10 @@ export default function LoginPage({ onLoginSuccess }) {
 
     try {
 
-      // In development, proxy through /api/odoo_connect to avoid CORS/Cookie restrictions.
-      const API_URL = '/api/odoo_connect'
+      // Use absolute URL on Capacitor (mobile) and relative URL on web (to avoid CORS/Cookie restrictions in dev proxy).
+      const API_URL = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
+        ? 'http://192.168.29.99:8019/odoo_connect'
+        : '/api/odoo_connect'
 
       const response = await fetch(API_URL, {
         method: 'GET',
