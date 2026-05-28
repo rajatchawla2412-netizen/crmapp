@@ -5,6 +5,10 @@ export default function LandingPage({ user, onLogout }) {
   const [isLoading, setIsLoading] = useState(false)
   const [nextId, setNextId] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+<<<<<<< HEAD
+=======
+  const [stats, setStats] = useState({ totalLoaded: 0 })
+>>>>>>> e4a6668cb1e054322a9587aa5b86101b3a39c57a
   const observer = useRef()
 
   const loadMorePartners = useCallback(async () => {
@@ -94,7 +98,11 @@ export default function LandingPage({ user, onLogout }) {
           const existingIds = new Set(prev.map(p => p.id))
           const uniqueNew = validPartners.filter(p => !existingIds.has(p.id))
           const merged = [...prev, ...uniqueNew]
+<<<<<<< HEAD
 
+=======
+          setStats({ totalLoaded: merged.length })
+>>>>>>> e4a6668cb1e054322a9587aa5b86101b3a39c57a
           return merged
         })
       }
@@ -216,9 +224,19 @@ export default function LandingPage({ user, onLogout }) {
                 Partners Directory
               </h1>
               <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-2 max-w-xl leading-relaxed">
+<<<<<<< HEAD
                 Browse list of Odoo partners loaded dynamically.
               </p>
             </div>
+=======
+                Browse list of Odoo partners loaded dynamically. Currently displaying <span className="font-semibold text-purple-600 dark:text-purple-400">{stats.totalLoaded}</span> partner cards.
+              </p>
+            </div>
+            <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 px-5 py-4 rounded-2xl flex flex-col">
+              <span className="text-[10px] text-zinc-450 uppercase tracking-widest font-semibold">Active Database</span>
+              <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-0.5">{user?.db || 'vendor_booking'}</span>
+            </div>
+>>>>>>> e4a6668cb1e054322a9587aa5b86101b3a39c57a
           </div>
         </section>
 
