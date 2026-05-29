@@ -15,6 +15,7 @@ export default function LandingPage({ user, onLogout }) {
   const [formPhone, setFormPhone] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [formMessage, setFormMessage] = useState({ type: '', text: '' })
+  const [formErrors, setFormErrors] = useState({ name: '', email: '', phone: '' })
 
   const loadMorePartners = useCallback(async (isRefresh = false) => {
     if (isLoading || (!isRefresh && !hasMore)) return
@@ -134,8 +135,46 @@ export default function LandingPage({ user, onLogout }) {
 
   const handleCreatePartner = useCallback(async (e) => {
     e.preventDefault()
-    if (!formName.trim() || !formEmail.trim() || !formPhone.trim()) {
-      setFormMessage({ type: 'error', text: 'કૃપા કરીને બધા ફીલ્ડ્સ ભરો.' })
+
+    let hasError = false
+    const newErrors = { name: '', email: '', phone: '' }
+
+    // Name validation
+    const trimmedName = formName.trim()
+    if (!trimmedName) {
+      newErrors.name = 'નામ દાખલ કરવું જરૂરી છે.'
+      hasError = true
+    } else if (trimmedName.length < 2) {
+      newErrors.name = 'નામ ઓછામાં ઓછું ૨ અક્ષરનું હોવું જોઈએ.'
+      hasError = true
+    }
+
+    // Email validation
+    const trimmedEmail = formEmail.trim()
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (!trimmedEmail) {
+      newErrors.email = 'ઇમેઇલ દાખલ કરવો જરૂરી છે.'
+      hasError = true
+    } else if (!emailRegex.test(trimmedEmail)) {
+      newErrors.email = 'કૃપા કરીને માન્ય ઇમેઇલ સરનામું દાખલ કરો.'
+      hasError = true
+    }
+
+    // Phone validation
+    const trimmedPhone = formPhone.trim()
+    const phoneRegex = /^[0-9]{10}$/
+    if (!trimmedPhone) {
+      newErrors.phone = 'ફોન નંબર દાખલ કરવો જરૂરી છે.'
+      hasError = true
+    } else if (!phoneRegex.test(trimmedPhone)) {
+      newErrors.phone = 'કૃપા કરીને માન્ય ૧૦ આંકડાનો ફોન નંબર દાખલ કરો.'
+      hasError = true
+    }
+
+    setFormErrors(newErrors)
+
+    if (hasError) {
+      setFormMessage({ type: 'error', text: 'કૃપા કરીને ફોર્મમાં રહેલી ભૂલો સુધારો.' })
       return
     }
 
@@ -191,6 +230,7 @@ export default function LandingPage({ user, onLogout }) {
         setFormName('')
         setFormEmail('')
         setFormPhone('')
+        setFormErrors({ name: '', email: '', phone: '' })
 
         await loadMorePartners(true)
 
@@ -284,6 +324,7 @@ export default function LandingPage({ user, onLogout }) {
                 onClick={() => {
                   setView('list')
                   setFormMessage({ type: '', text: '' })
+                  setFormErrors({ name: '', email: '', phone: '' })
                 }}
                 className="p-2 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-850 rounded-xl transition-all cursor-pointer flex items-center justify-center"
                 title="પાછા જાઓ"
@@ -297,8 +338,8 @@ export default function LandingPage({ user, onLogout }) {
             {/* Notification Banner */}
             {formMessage.text && (
               <div className={`mb-6 p-4 rounded-xl text-sm border flex items-start gap-3 transition-all duration-300 ${formMessage.type === 'success'
-                  ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30 text-emerald-800 dark:text-emerald-300'
-                  : 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/30 text-rose-800 dark:text-rose-300'
+                ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900/30 text-emerald-800 dark:text-emerald-300'
+                : 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/30 text-rose-800 dark:text-rose-300'
                 }`}>
                 {formMessage.type === 'success' ? (
                   <svg className="w-5 h-5 flex-shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -323,12 +364,21 @@ export default function LandingPage({ user, onLogout }) {
                   type="text"
                   id="formName"
                   value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
+                  onChange={(e) => {
+                    setFormName(e.target.value)
+                    if (formErrors.name) setFormErrors(prev => ({ ...prev, name: '' }))
+                  }}
                   placeholder="ભાગીદારનું નામ"
                   disabled={isSaving}
                   required
-                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:focus:border-purple-400 disabled:opacity-50 transition-all font-medium text-sm"
+                  className={`w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 disabled:opacity-50 transition-all font-medium text-sm ${formErrors.name
+                      ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
+                      : 'border-zinc-200 dark:border-zinc-800 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500/20'
+                    }`}
                 />
+                {formErrors.name && (
+                  <p className="text-rose-500 dark:text-rose-455 text-xs mt-1.5 font-medium">{formErrors.name}</p>
+                )}
               </div>
 
               <div>
@@ -339,12 +389,21 @@ export default function LandingPage({ user, onLogout }) {
                   type="email"
                   id="formEmail"
                   value={formEmail}
-                  onChange={(e) => setFormEmail(e.target.value)}
+                  onChange={(e) => {
+                    setFormEmail(e.target.value)
+                    if (formErrors.email) setFormErrors(prev => ({ ...prev, email: '' }))
+                  }}
                   placeholder="example@domain.com"
                   disabled={isSaving}
                   required
-                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:focus:border-purple-400 disabled:opacity-50 transition-all font-medium text-sm"
+                  className={`w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 disabled:opacity-50 transition-all font-medium text-sm ${formErrors.email
+                      ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
+                      : 'border-zinc-200 dark:border-zinc-800 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500/20'
+                    }`}
                 />
+                {formErrors.email && (
+                  <p className="text-rose-500 dark:text-rose-455 text-xs mt-1.5 font-medium">{formErrors.email}</p>
+                )}
               </div>
 
               <div>
@@ -355,18 +414,29 @@ export default function LandingPage({ user, onLogout }) {
                   type="tel"
                   id="formPhone"
                   value={formPhone}
-                  onChange={(e) => setFormPhone(e.target.value)}
+                  onChange={(e) => {
+                    const cleanVal = e.target.value.replace(/\D/g, '').slice(0, 10)
+                    setFormPhone(cleanVal)
+                    if (formErrors.phone) setFormErrors(prev => ({ ...prev, phone: '' }))
+                  }}
                   placeholder="ફોન નંબર"
+                  maxLength={10}
                   disabled={isSaving}
                   required
-                  className="w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 dark:focus:border-purple-400 disabled:opacity-50 transition-all font-medium text-sm"
+                  className={`w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 disabled:opacity-50 transition-all font-medium text-sm ${formErrors.phone
+                      ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
+                      : 'border-zinc-200 dark:border-zinc-800 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500/20'
+                    }`}
                 />
+                {formErrors.phone && (
+                  <p className="text-rose-500 dark:text-rose-455 text-xs mt-1.5 font-medium">{formErrors.phone}</p>
+                )}
               </div>
 
               <div className="flex items-center gap-4 pt-4">
                 <button
                   type="submit"
-                  disabled={isSaving || !formName.trim() || !formEmail.trim() || !formPhone.trim()}
+                  disabled={isSaving}
                   className="px-6 py-3 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white font-medium rounded-xl transition-all shadow-md shadow-purple-500/10 hover:shadow-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm cursor-pointer"
                 >
                   {isSaving ? (
@@ -386,9 +456,10 @@ export default function LandingPage({ user, onLogout }) {
                   onClick={() => {
                     setView('list')
                     setFormMessage({ type: '', text: '' })
+                    setFormErrors({ name: '', email: '', phone: '' })
                   }}
                   disabled={isSaving}
-                  className="px-6 py-3 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-450 hover:bg-zinc-50 dark:hover:bg-zinc-850 font-medium rounded-xl transition-all text-sm cursor-pointer disabled:opacity-50"
+                  className="px-6 py-3 border border-zinc-200 text-red-600 dark:border-zinc-800  dark:text-red-600 hover:bg-zinc-50 dark:hover:bg-zinc-850 font-medium rounded-xl transition-all text-sm cursor-pointer disabled:opacity-50"
                 >
                   રદ કરો
                 </button>
@@ -421,6 +492,7 @@ export default function LandingPage({ user, onLogout }) {
                   setFormEmail('')
                   setFormPhone('')
                   setFormMessage({ type: '', text: '' })
+                  setFormErrors({ name: '', email: '', phone: '' })
                   setView('create')
                 }}
                 className="px-5 py-3 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white rounded-2xl text-xs font-semibold shadow-md shadow-purple-500/10 hover:shadow-purple-500/20 transition-all flex items-center gap-2 cursor-pointer self-start md:self-auto"
