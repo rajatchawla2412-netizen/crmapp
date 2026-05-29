@@ -372,8 +372,8 @@ export default function LandingPage({ user, onLogout }) {
                   disabled={isSaving}
                   required
                   className={`w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 disabled:opacity-50 transition-all font-medium text-sm ${formErrors.name
-                      ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
-                      : 'border-zinc-200 dark:border-zinc-800 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500/20'
+                    ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
+                    : 'border-zinc-200 dark:border-zinc-800 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500/20'
                     }`}
                 />
                 {formErrors.name && (
@@ -397,8 +397,8 @@ export default function LandingPage({ user, onLogout }) {
                   disabled={isSaving}
                   required
                   className={`w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 disabled:opacity-50 transition-all font-medium text-sm ${formErrors.email
-                      ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
-                      : 'border-zinc-200 dark:border-zinc-800 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500/20'
+                    ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
+                    : 'border-zinc-200 dark:border-zinc-800 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500/20'
                     }`}
                 />
                 {formErrors.email && (
@@ -424,8 +424,8 @@ export default function LandingPage({ user, onLogout }) {
                   disabled={isSaving}
                   required
                   className={`w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 disabled:opacity-50 transition-all font-medium text-sm ${formErrors.phone
-                      ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
-                      : 'border-zinc-200 dark:border-zinc-800 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500/20'
+                    ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
+                    : 'border-zinc-200 dark:border-zinc-800 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500/20'
                     }`}
                 />
                 {formErrors.phone && (
@@ -459,7 +459,7 @@ export default function LandingPage({ user, onLogout }) {
                     setFormErrors({ name: '', email: '', phone: '' })
                   }}
                   disabled={isSaving}
-                  className="px-6 py-3 border border-zinc-200 text-red-600 dark:border-zinc-800  dark:text-red-600 hover:bg-zinc-50 dark:hover:bg-zinc-850 font-medium rounded-xl transition-all text-sm cursor-pointer disabled:opacity-50"
+                  className="px-6 py-3 border border-red-600 text-red-600 bg-zinc-800 dark:border-red-600  dark:text-red-600 hover:bg-zinc-50 dark:hover:bg-zinc-850 dark:bg-zinc-800 font-medium rounded-xl transition-all text-sm cursor-pointer disabled:opacity-50"
                 >
                   રદ કરો
                 </button>
