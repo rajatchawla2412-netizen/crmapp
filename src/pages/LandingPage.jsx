@@ -459,7 +459,7 @@ export default function LandingPage({ user, onLogout }) {
                     setFormErrors({ name: '', email: '', phone: '' })
                   }}
                   disabled={isSaving}
-                  className="px-6 py-3 border border-red-600 text-red-600 bg-zinc-800 dark:border-red-600  dark:text-red-600 hover:bg-zinc-50 dark:hover:bg-zinc-850 dark:bg-zinc-800 font-medium rounded-xl transition-all text-sm cursor-pointer disabled:opacity-50"
+                  className="px-6 py-3 border border-red-600 text-red-600 bg-zinc-50 dark:border-red-600  dark:text-red-600 hover:bg-zinc-50 dark:hover:bg-zinc-850 dark:bg-zinc-800 font-bold rounded-xl transition-all text-sm cursor-pointer disabled:opacity-50"
                 >
                   રદ કરો
                 </button>
