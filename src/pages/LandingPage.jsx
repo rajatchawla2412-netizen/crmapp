@@ -268,7 +268,7 @@ export default function LandingPage({ user, onLogout }) {
       if (entries[0].isIntersecting) {
         loadMorePartners()
       }
-    }, { threshold: 0.1 })
+    }, { threshold: 0.01 })
 
     if (node) observer.current.observe(node)
   }, [isLoading, hasMore, loadMorePartners])
