@@ -6,7 +6,7 @@ export default function LoginPage({ onLoginSuccess }) {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const db = 'porduct.template'
+  const db = 'may29_rest_api'
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Capacitor } from '@capacitor/core'
 import PullToRefresh from 'react-simple-pull-to-refresh'
+import ProductDetailsPage from './ProductDetailsPage'
 
 export default function LandingPage({ user, onLogout }) {
   const [products, setProducts] = useState([])
@@ -9,7 +10,8 @@ export default function LandingPage({ user, onLogout }) {
   const [hasMore, setHasMore] = useState(true)
   const observer = useRef()
 
-  const [view, setView] = useState('list') // 'list' or 'create'
+  const [view, setView] = useState('list') // 'list' or 'create' or 'details'
+  const [selectedProduct, setSelectedProduct] = useState(null)
   const [formName, setFormName] = useState('')
   const [formPrice, setFormPrice] = useState('')
   const [formCategory, setFormCategory] = useState('')
@@ -84,17 +86,22 @@ export default function LandingPage({ user, onLogout }) {
 
           if (record && (record.name || record.display_name)) {
             let category = 'શ્રેણી વગરનું'
-            if (Array.isArray(record.categ_id) && record.categ_id.length > 1) {
-              category = record.categ_id[1]
+            let categoryId = 1
+            if (Array.isArray(record.categ_id) && record.categ_id.length > 0) {
+              category = record.categ_id[1] || 'શ્રેણી વગરનું'
+              categoryId = record.categ_id[0] || 1
             } else if (typeof record.categ_id === 'string') {
               category = record.categ_id
+            } else if (typeof record.categ_id === 'number') {
+              categoryId = record.categ_id
             }
 
             return {
               id: record.id || id,
               name: record.name || record.display_name,
               price: record.list_price !== undefined ? record.list_price : 0,
-              category: category
+              category: category,
+              categoryId: categoryId
             }
           }
 
@@ -486,6 +493,17 @@ export default function LandingPage({ user, onLogout }) {
             </form>
           </div>
         </section>
+      ) : view === 'details' && selectedProduct ? (
+        <ProductDetailsPage
+          product={selectedProduct}
+          onBack={() => {
+            setView('list')
+            setSelectedProduct(null)
+          }}
+          onRefreshList={() => loadMoreProducts(true)}
+          onLogout={onLogout}
+          user={user}
+        />
       ) : (
         <>
           {/* Welcome Section */}
@@ -532,7 +550,11 @@ export default function LandingPage({ user, onLogout }) {
                 <div
                   key={product.id}
                   ref={isLast ? lastProductElementRef : null}
-                  className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
+                  onClick={() => {
+                    setSelectedProduct(product)
+                    setView('details')
+                  }}
+                  className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between cursor-pointer"
                 >
                   <div>
                     <div className="flex items-center gap-4 mb-5">
