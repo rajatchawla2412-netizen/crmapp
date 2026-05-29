@@ -3,7 +3,7 @@ import { Capacitor } from '@capacitor/core'
 import PullToRefresh from 'react-simple-pull-to-refresh'
 
 export default function LandingPage({ user, onLogout }) {
-  const [partners, setPartners] = useState([])
+  const [products, setProducts] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [nextId, setNextId] = useState(1)
   const [hasMore, setHasMore] = useState(true)
@@ -11,13 +11,13 @@ export default function LandingPage({ user, onLogout }) {
 
   const [view, setView] = useState('list') // 'list' or 'create'
   const [formName, setFormName] = useState('')
-  const [formEmail, setFormEmail] = useState('')
-  const [formPhone, setFormPhone] = useState('')
+  const [formPrice, setFormPrice] = useState('')
+  const [formCategory, setFormCategory] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [formMessage, setFormMessage] = useState({ type: '', text: '' })
-  const [formErrors, setFormErrors] = useState({ name: '', email: '', phone: '' })
+  const [formErrors, setFormErrors] = useState({ name: '', price: '', category: '' })
 
-  const loadMorePartners = useCallback(async (isRefresh = false) => {
+  const loadMoreProducts = useCallback(async (isRefresh = false) => {
     if (isLoading || (!isRefresh && !hasMore)) return
     setIsLoading(true)
 
@@ -36,7 +36,7 @@ export default function LandingPage({ user, onLogout }) {
 
       const fetchPromises = idsToFetch.map(async (id) => {
         try {
-          const url = `${API_URL}?model=res.partner&Id=${id}&fields=name,email,phone`
+          const url = `${API_URL}?model=product.template&Id=${id}&fields=name,list_price,categ_id`
           const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -83,33 +83,40 @@ export default function LandingPage({ user, onLogout }) {
           }
 
           if (record && (record.name || record.display_name)) {
+            let category = 'શ્રેણી વગરનું'
+            if (Array.isArray(record.categ_id) && record.categ_id.length > 1) {
+              category = record.categ_id[1]
+            } else if (typeof record.categ_id === 'string') {
+              category = record.categ_id
+            }
+
             return {
               id: record.id || id,
               name: record.name || record.display_name,
-              email: record.email || 'No email',
-              phone: record.phone || 'No phone'
+              price: record.list_price !== undefined ? record.list_price : 0,
+              category: category
             }
           }
 
           return null
         } catch (e) {
-          console.error(`Failed to fetch partner with ID ${id}:`, e)
+          console.error(`Failed to fetch product with ID ${id}:`, e)
           return null
         }
       })
 
       const results = await Promise.all(fetchPromises)
-      const validPartners = results.filter(p => p !== null)
+      const validProducts = results.filter(p => p !== null)
 
       if (isRefresh) {
-        setPartners(validPartners)
+        setProducts(validProducts)
         setNextId(11)
         setHasMore(true)
       } else {
-        if (validPartners.length > 0) {
-          setPartners(prev => {
+        if (validProducts.length > 0) {
+          setProducts(prev => {
             const existingIds = new Set(prev.map(p => p.id))
-            const uniqueNew = validPartners.filter(p => !existingIds.has(p.id))
+            const uniqueNew = validProducts.filter(p => !existingIds.has(p.id))
             const merged = [...prev, ...uniqueNew]
 
             return merged
@@ -118,56 +125,54 @@ export default function LandingPage({ user, onLogout }) {
         setNextId(prev => prev + 10)
       }
 
-      // Stop fetching if we check past the last found partner ID and find no more partners
-      const currentPartners = isRefresh ? validPartners : partners
-      const maxLoadedId = currentPartners.length > 0 ? Math.max(...currentPartners.map(p => p.id)) : 0
+      // Stop fetching if we check past the last found product ID and find no more products
+      const currentProducts = isRefresh ? validProducts : products
+      const maxLoadedId = currentProducts.length > 0 ? Math.max(...currentProducts.map(p => p.id)) : 0
       const checkLimit = Math.max(maxLoadedId + 20, 50)
       const currentNextIdAfterFetch = isRefresh ? 11 : (nextId + 10)
-      if (validPartners.length === 0 && currentNextIdAfterFetch > checkLimit) {
+      if (validProducts.length === 0 && currentNextIdAfterFetch > checkLimit) {
         setHasMore(false)
       }
     } catch (error) {
-      console.error('Error fetching partners batch:', error)
+      console.error('Error fetching products batch:', error)
     } finally {
       setIsLoading(false)
     }
-  }, [nextId, isLoading, hasMore, user, onLogout, partners])
+  }, [nextId, isLoading, hasMore, user, onLogout, products])
 
-  const handleCreatePartner = useCallback(async (e) => {
+  const handleCreateProduct = useCallback(async (e) => {
     e.preventDefault()
 
     let hasError = false
-    const newErrors = { name: '', email: '', phone: '' }
+    const newErrors = { name: '', price: '', category: '' }
 
     // Name validation
     const trimmedName = formName.trim()
     if (!trimmedName) {
-      newErrors.name = 'નામ દાખલ કરવું જરૂરી છે.'
+      newErrors.name = 'ઉત્પાદન નામ દાખલ કરવું જરૂરી છે.'
       hasError = true
     } else if (trimmedName.length < 2) {
       newErrors.name = 'નામ ઓછામાં ઓછું ૨ અક્ષરનું હોવું જોઈએ.'
       hasError = true
     }
 
-    // Email validation
-    const trimmedEmail = formEmail.trim()
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-    if (!trimmedEmail) {
-      newErrors.email = 'ઇમેઇલ દાખલ કરવો જરૂરી છે.'
+    // Price validation
+    const trimmedPrice = formPrice.trim()
+    if (!trimmedPrice) {
+      newErrors.price = 'કિંમત દાખલ કરવી જરૂરી છે.'
       hasError = true
-    } else if (!emailRegex.test(trimmedEmail)) {
-      newErrors.email = 'કૃપા કરીને માન્ય ઇમેઇલ સરનામું દાખલ કરો.'
+    } else if (isNaN(trimmedPrice) || Number(trimmedPrice) <= 0) {
+      newErrors.price = 'કૃપા કરીને યોગ્ય કિંમત દાખલ કરો.'
       hasError = true
     }
 
-    // Phone validation
-    const trimmedPhone = formPhone.trim()
-    const phoneRegex = /^[0-9]{10}$/
-    if (!trimmedPhone) {
-      newErrors.phone = 'ફોન નંબર દાખલ કરવો જરૂરી છે.'
+    // Category validation
+    const trimmedCategory = formCategory.trim()
+    if (!trimmedCategory) {
+      newErrors.category = 'શ્રેણી ID દાખલ કરવું જરૂરી છે.'
       hasError = true
-    } else if (!phoneRegex.test(trimmedPhone)) {
-      newErrors.phone = 'કૃપા કરીને માન્ય ૧૦ આંકડાનો ફોન નંબર દાખલ કરો.'
+    } else if (isNaN(trimmedCategory) || !Number.isInteger(Number(trimmedCategory)) || Number(trimmedCategory) <= 0) {
+      newErrors.category = 'કૃપા કરીને યોગ્ય શ્રેણી ID (પૂર્ણાંક) દાખલ કરો.'
       hasError = true
     }
 
@@ -189,10 +194,7 @@ export default function LandingPage({ user, onLogout }) {
         ? 'http://192.168.29.99:8019/send_request'
         : '/api/send_request'
 
-      const cleanPhone = formPhone.trim()
-      const parsedPhone = /^\d+$/.test(cleanPhone) ? Number(cleanPhone) : cleanPhone
-
-      const response = await fetch(`${API_URL}?model=res.partner`, {
+      const response = await fetch(`${API_URL}?model=product.template`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -201,14 +203,19 @@ export default function LandingPage({ user, onLogout }) {
           'lang': 'gu'
         },
         body: JSON.stringify({
-          fields: ["name", "email", "phone"],
+          fields: ["name", "list_price", "categ_id"],
           values: {
             name: formName.trim(),
-            email: formEmail.trim(),
-            phone: parsedPhone
+            list_price: Number(formPrice) || 0,
+            categ_id: Number(formCategory) || 1
           }
         })
       })
+
+      if (response.status === 401 || response.status === 403) {
+        onLogout()
+        return
+      }
 
       let data = {}
       const contentType = response.headers.get('content-type')
@@ -225,57 +232,70 @@ export default function LandingPage({ user, onLogout }) {
         }
       }
 
-      if (response.ok) {
-        setFormMessage({ type: 'success', text: 'ભાગીદાર સફળતાપૂર્વક ઉમેરવામાં આવ્યો!' })
-        setFormName('')
-        setFormEmail('')
-        setFormPhone('')
-        setFormErrors({ name: '', email: '', phone: '' })
+      const isSuccess = response.ok && data && (data.status === 'success' || (!data.error && data.status !== 'error' && data.status !== 'failed'))
 
-        await loadMorePartners(true)
+      if (isSuccess) {
+        setFormMessage({ type: 'success', text: 'ઉત્પાદન સફળતાપૂર્વક ઉમેરવામાં આવ્યું!' })
+        setFormName('')
+        setFormPrice('')
+        setFormCategory('')
+        setFormErrors({ name: '', price: '', category: '' })
+
+        await loadMoreProducts(true)
 
         setTimeout(() => {
           setView('list')
           setFormMessage({ type: '', text: '' })
         }, 1500)
       } else {
+        const errorMsg = data.message || data.error || 'ઉત્પાદન ઉમેરવામાં નિષ્ફળતા મળી. કૃપા કરીને ફરી પ્રયાસ કરો.'
         setFormMessage({
           type: 'error',
-          text: data.message || 'ભાગીદાર ઉમેરવામાં નિષ્ફળતા મળી. કૃપા કરીને ફરી પ્રયાસ કરો.'
+          text: errorMsg
         })
       }
     } catch (error) {
-      console.error('Error creating partner:', error)
+      console.error('Error creating product:', error)
+      let errorMessage = 'નેટવર્ક ભૂલ. કૃપા કરીને ફરી પ્રયાસ કરો.'
+
+      if (!navigator.onLine) {
+        errorMessage = 'ઇન્ટરનેટ કનેક્શન ઉપલબ્ધ નથી. કૃપા કરીને તમારું કનેક્શન તપાસો.'
+      } else if (error.name === 'TypeError') {
+        errorMessage = 'સર્વર સાથે કનેક્ટ થવામાં નિષ્ફળતા. કૃપા કરીને સર્વર ચાલુ છે કે નહીં તે તપાસો.'
+      } else if (error.message) {
+        errorMessage = `નેટવર્ક ભૂલ: ${error.message}`
+      }
+
       setFormMessage({
         type: 'error',
-        text: 'નેટવર્ક ભૂલ. કૃપા કરીને તમારું કનેક્શન તપાસો અને ફરી પ્રયાસ કરો.'
+        text: errorMessage
       })
     } finally {
       setIsSaving(false)
     }
-  }, [formName, formEmail, formPhone, user, loadMorePartners])
+  }, [formName, formPrice, formCategory, user, loadMoreProducts])
 
   const handleRefresh = useCallback(async () => {
-    await loadMorePartners(true)
-  }, [loadMorePartners])
+    await loadMoreProducts(true)
+  }, [loadMoreProducts])
 
   // Observer callback for scroll detection
-  const lastPartnerElementRef = useCallback(node => {
+  const lastProductElementRef = useCallback(node => {
     if (isLoading || !hasMore) return
     if (observer.current) observer.current.disconnect()
 
     observer.current = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting) {
-        loadMorePartners()
+        loadMoreProducts()
       }
     }, { threshold: 0.01 })
 
     if (node) observer.current.observe(node)
-  }, [isLoading, hasMore, loadMorePartners])
+  }, [isLoading, hasMore, loadMoreProducts])
 
   // Initial load
   useEffect(() => {
-    loadMorePartners()
+    loadMoreProducts()
   }, [])
 
   // Helper to generate initials avatar color class
@@ -313,10 +333,10 @@ export default function LandingPage({ user, onLogout }) {
             <div className="flex items-center justify-between mb-8 pb-4 border-b border-zinc-200/60 dark:border-zinc-800/60">
               <div>
                 <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50 margin-0">
-                  નવો ભાગીદાર ઉમેરો
+                  નવું ઉત્પાદન ઉમેરો
                 </h2>
                 <p className="text-zinc-500 dark:text-zinc-400 text-xs mt-1">
-                  Odoo માં નવો ભાગીદાર ઉમેરવા માટે વિગતો ભરો.
+                  Odoo માં નવું ઉત્પાદન ઉમેરવા માટે વિગતો ભરો.
                 </p>
               </div>
               <button
@@ -324,7 +344,7 @@ export default function LandingPage({ user, onLogout }) {
                 onClick={() => {
                   setView('list')
                   setFormMessage({ type: '', text: '' })
-                  setFormErrors({ name: '', email: '', phone: '' })
+                  setFormErrors({ name: '', price: '', category: '' })
                 }}
                 className="p-2 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-850 rounded-xl transition-all cursor-pointer flex items-center justify-center"
                 title="પાછા જાઓ"
@@ -355,10 +375,10 @@ export default function LandingPage({ user, onLogout }) {
             )}
 
             {/* Form */}
-            <form onSubmit={handleCreatePartner} className="space-y-6 max-w-xl">
+            <form onSubmit={handleCreateProduct} className="space-y-6 max-w-xl">
               <div>
                 <label htmlFor="formName" className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
-                  નામ <span className="text-rose-500">*</span>
+                  ઉત્પાદન નામ <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -368,7 +388,7 @@ export default function LandingPage({ user, onLogout }) {
                     setFormName(e.target.value)
                     if (formErrors.name) setFormErrors(prev => ({ ...prev, name: '' }))
                   }}
-                  placeholder="ભાગીદારનું નામ"
+                  placeholder="ઉત્પાદનનું નામ"
                   disabled={isSaving}
                   required
                   className={`w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 disabled:opacity-50 transition-all font-medium text-sm ${formErrors.name
@@ -382,54 +402,53 @@ export default function LandingPage({ user, onLogout }) {
               </div>
 
               <div>
-                <label htmlFor="formEmail" className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
-                  ઇમેઇલ <span className="text-rose-500">*</span>
+                <label htmlFor="formPrice" className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
+                  કિંમત <span className="text-rose-500">*</span>
                 </label>
                 <input
-                  type="email"
-                  id="formEmail"
-                  value={formEmail}
+                  type="number"
+                  step="0.01"
+                  id="formPrice"
+                  value={formPrice}
                   onChange={(e) => {
-                    setFormEmail(e.target.value)
-                    if (formErrors.email) setFormErrors(prev => ({ ...prev, email: '' }))
+                    setFormPrice(e.target.value)
+                    if (formErrors.price) setFormErrors(prev => ({ ...prev, price: '' }))
                   }}
-                  placeholder="example@domain.com"
+                  placeholder="કિંમત (દા.ત. ૫૦૦)"
                   disabled={isSaving}
                   required
-                  className={`w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 disabled:opacity-50 transition-all font-medium text-sm ${formErrors.email
+                  className={`w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 disabled:opacity-50 transition-all font-medium text-sm ${formErrors.price
                     ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
                     : 'border-zinc-200 dark:border-zinc-800 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500/20'
                     }`}
                 />
-                {formErrors.email && (
-                  <p className="text-rose-500 dark:text-rose-455 text-xs mt-1.5 font-medium">{formErrors.email}</p>
+                {formErrors.price && (
+                  <p className="text-rose-500 dark:text-rose-455 text-xs mt-1.5 font-medium">{formErrors.price}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="formPhone" className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
-                  ફોન નંબર <span className="text-rose-500">*</span>
+                <label htmlFor="formCategory" className="block text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 mb-2">
+                  શ્રેણી ID <span className="text-rose-500">*</span>
                 </label>
                 <input
-                  type="tel"
-                  id="formPhone"
-                  value={formPhone}
+                  type="number"
+                  id="formCategory"
+                  value={formCategory}
                   onChange={(e) => {
-                    const cleanVal = e.target.value.replace(/\D/g, '').slice(0, 10)
-                    setFormPhone(cleanVal)
-                    if (formErrors.phone) setFormErrors(prev => ({ ...prev, phone: '' }))
+                    setFormCategory(e.target.value)
+                    if (formErrors.category) setFormErrors(prev => ({ ...prev, category: '' }))
                   }}
-                  placeholder="ફોન નંબર"
-                  maxLength={10}
+                  placeholder="શ્રેણી ID (દા.ત. ૫)"
                   disabled={isSaving}
                   required
-                  className={`w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 disabled:opacity-50 transition-all font-medium text-sm ${formErrors.phone
+                  className={`w-full px-4 py-3 bg-zinc-50 dark:bg-zinc-950 border rounded-xl text-zinc-900 dark:text-zinc-50 placeholder-zinc-400 focus:outline-none focus:ring-2 disabled:opacity-50 transition-all font-medium text-sm ${formErrors.category
                     ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500/20'
                     : 'border-zinc-200 dark:border-zinc-800 focus:border-purple-500 dark:focus:border-purple-400 focus:ring-purple-500/20'
                     }`}
                 />
-                {formErrors.phone && (
-                  <p className="text-rose-500 dark:text-rose-455 text-xs mt-1.5 font-medium">{formErrors.phone}</p>
+                {formErrors.category && (
+                  <p className="text-rose-500 dark:text-rose-455 text-xs mt-1.5 font-medium">{formErrors.category}</p>
                 )}
               </div>
 
@@ -456,7 +475,7 @@ export default function LandingPage({ user, onLogout }) {
                   onClick={() => {
                     setView('list')
                     setFormMessage({ type: '', text: '' })
-                    setFormErrors({ name: '', email: '', phone: '' })
+                    setFormErrors({ name: '', price: '', category: '' })
                   }}
                   disabled={isSaving}
                   className="px-6 py-3 border border-red-600 text-red-600 bg-zinc-50 dark:border-red-600  dark:text-red-600 hover:bg-zinc-50 dark:hover:bg-zinc-850 dark:bg-zinc-800 font-bold rounded-xl transition-all text-sm cursor-pointer disabled:opacity-50"
@@ -479,20 +498,20 @@ export default function LandingPage({ user, onLogout }) {
                   કનેક્ટ થયેલ: {user?.firstName || 'ઓપરેટર'}
                 </div>
                 <h1 className="text-3xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50 margin-0">
-                  ભાગીદારોની યાદી
+                  ઉત્પાદનોની યાદી
                 </h1>
                 <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-2 max-w-xl leading-relaxed">
-                  ડાયનામિક રીતે લોડ થયેલા Odoo ભાગીદારોની યાદી બ્રાઉઝ કરો.
+                  ડાયનામિક રીતે લોડ થયેલા Odoo ઉત્પાદનોની યાદી બ્રાઉઝ કરો.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => {
                   setFormName('')
-                  setFormEmail('')
-                  setFormPhone('')
+                  setFormPrice('')
+                  setFormCategory('')
                   setFormMessage({ type: '', text: '' })
-                  setFormErrors({ name: '', email: '', phone: '' })
+                  setFormErrors({ name: '', price: '', category: '' })
                   setView('create')
                 }}
                 className="px-5 py-3 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white rounded-2xl text-xs font-semibold shadow-md shadow-purple-500/10 hover:shadow-purple-500/20 transition-all flex items-center gap-2 cursor-pointer self-start md:self-auto"
@@ -500,52 +519,54 @@ export default function LandingPage({ user, onLogout }) {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
-                <span>નવો ભાગીદાર ઉમેરો</span>
+                <span>નવું ઉત્પાદન ઉમેરો</span>
               </button>
             </div>
           </section>
 
-          {/* Partners Grid */}
+          {/* Products Grid */}
           <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {partners.map((partner, index) => {
-              const isLast = index === partners.length - 1
+            {products.map((product, index) => {
+              const isLast = index === products.length - 1
               return (
                 <div
-                  key={partner.id}
-                  ref={isLast ? lastPartnerElementRef : null}
+                  key={product.id}
+                  ref={isLast ? lastProductElementRef : null}
                   className="bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-6 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex items-center gap-4 mb-5">
-                      <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${getAvatarGradient(partner.name)} flex items-center justify-center text-white font-bold text-lg shadow-inner`}>
-                        {getInitials(partner.name)}
+                      <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${getAvatarGradient(product.name)} flex items-center justify-center text-white font-bold text-lg shadow-inner`}>
+                        {getInitials(product.name)}
                       </div>
                       <div>
                         <h3 className="font-semibold text-zinc-950 dark:text-zinc-50 leading-snug">
-                          {partner.name}
+                          {product.name}
                         </h3>
                         <span className="text-[10px] font-mono text-zinc-450 bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 px-2 py-0.5 rounded-full">
-                          ID: {partner.id}
+                          ID: {product.id}
                         </span>
                       </div>
                     </div>
 
                     <div className="space-y-3">
                       <div className="flex items-center gap-3 text-zinc-600 dark:text-zinc-400">
+                        {/* Package/Box icon for Category */}
                         <svg className="w-4 h-4 flex-shrink-0 text-zinc-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                         </svg>
-                        <span className="text-xs truncate" title={partner.email}>
-                          {partner.email}
+                        <span className="text-xs truncate font-medium" title={product.category}>
+                          {product.category}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-3 text-zinc-600 dark:text-zinc-400">
-                        <svg className="w-4 h-4 flex-shrink-0 text-zinc-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-2.824-1.802-5.19-4.168-7-7l1.293-.97c.362-.271.528-.733.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
-                        </svg>
-                        <span className="text-xs truncate">
-                          {partner.phone}
+                        {/* Currency/Price icon */}
+                        <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                          ₹
+                        </span>
+                        <span className="text-xs font-bold text-zinc-950 dark:text-zinc-50">
+                          {Number(product.price).toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -584,23 +605,23 @@ export default function LandingPage({ user, onLogout }) {
           </section>
 
           {/* End of results message */}
-          {!hasMore && partners.length > 0 && (
+          {!hasMore && products.length > 0 && (
             <div className="text-center text-xs text-zinc-400 dark:text-zinc-550 mt-12 py-6 border-t border-zinc-200/60 dark:border-zinc-800/60">
-              લોડ કરવા માટે વધુ ભાગીદારો ઉપલબ્ધ નથી. ડિરેક્ટરીના તમામ આઇટમ્સ લોડ થઈ ગયા છે.
+              લોડ કરવા માટે વધુ ઉત્પાદનો ઉપલબ્ધ નથી. ડિરેક્ટરીના તમામ આઇટમ્સ લોડ થઈ ગયા છે.
             </div>
           )}
 
           {/* Empty State */}
-          {!isLoading && partners.length === 0 && (
+          {!isLoading && products.length === 0 && (
             <div className="flex-1 flex flex-col items-center justify-center text-center py-20 bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl p-8">
               <div className="w-16 h-16 bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-900/30 rounded-2xl flex items-center justify-center text-purple-600 dark:text-purple-400 mb-4">
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.109A2.25 2.25 0 0112.75 21.5h-1.5a2.25 2.25 0 01-2.25-2.263V19.13m4.121-3.077A9.38 9.38 0 0012 15.75c-1.39 0-2.68.303-3.84.845m8.59-4.845a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">ભાગીદારો મળ્યા નથી</h3>
+              <h3 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">ઉત્પાદનો મળ્યા નથી</h3>
               <p className="text-zinc-500 dark:text-zinc-400 text-xs mt-1 max-w-[280px]">
-                ડેટાબેઝમાંથી કોઈ ભાગીદાર પ્રોફાઇલ મેળવી શકાયા નથી. કૃપા કરીને તમારી Odoo API-Key અથવા નેટવર્ક કનેક્શન તપાસો.
+                ડેટાબેઝમાંથી કોઈ ઉત્પાદન મેળવી શકાયા નથી. કૃપા કરીને તમારી Odoo API-Key અથવા નેટવર્ક કનેક્શન તપાસો.
               </p>
             </div>
           )}
