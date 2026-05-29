@@ -317,7 +317,7 @@ export default function LandingPage({ user, onLogout }) {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.109A2.25 2.25 0 0112.75 21.5h-1.5a2.25 2.25 0 01-2.25-2.263V19.13m4.121-3.077A9.38 9.38 0 0012 15.75c-1.39 0-2.68.303-3.84.845m8.59-4.845a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">No Partners Found</h3>
+            <h3 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">ભાગીદારો મળ્યા નથી</h3>
             <p className="text-zinc-500 dark:text-zinc-400 text-xs mt-1 max-w-[280px]">
               ડેટાબેઝમાંથી કોઈ ભાગીદાર પ્રોફાઇલ મેળવી શકાયા નથી. કૃપા કરીને તમારી Odoo API-Key અથવા નેટવર્ક કનેક્શન તપાસો.
             </p>
