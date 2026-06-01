@@ -33,6 +33,7 @@ function App() {
     setUser(null)
     localStorage.removeItem('user')
     localStorage.removeItem('api-key')
+    localStorage.removeItem('cart')
   }
 
   return (

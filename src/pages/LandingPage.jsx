@@ -23,11 +23,11 @@ function ProductCard({ product, onAddToCart, getAvatarGradient, getInitials }) {
         <div className={`w-8.5 h-8.5 rounded-lg bg-gradient-to-br ${getAvatarGradient(product.name)} flex items-center justify-center text-white font-bold text-xs shadow-inner`}>
           {getInitials(product.name)}
         </div>
-        <div>
+        <div className="flex flex-col items-start">
           <h4 className="font-semibold text-xs text-zinc-900 dark:text-zinc-100 leading-snug truncate max-w-[200px]" title={product.name}>
             {product.name}
           </h4>
-          <span className="text-[8px] font-mono text-zinc-400 bg-white dark:bg-zinc-950 border border-zinc-150/50 dark:border-zinc-850 px-1.5 py-0.5 rounded-full inline-block mt-0.5">
+          <span className="text-[8px] font-mono text-zinc-400 bg-white dark:bg-zinc-950 border border-zinc-150/50 dark:border-zinc-850 px-1.5 py-0.2 rounded-[8px] inline-block mt-0.5">
             ID: {product.id}
           </span>
         </div>
@@ -49,7 +49,7 @@ function ProductCard({ product, onAddToCart, getAvatarGradient, getInitials }) {
             <button
               type="button"
               onClick={handleDecrement}
-              className="w-6 h-6 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+              className="w-5 h-5 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-[20px] hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
             >
               -
             </button>
@@ -59,7 +59,7 @@ function ProductCard({ product, onAddToCart, getAvatarGradient, getInitials }) {
             <button
               type="button"
               onClick={handleIncrement}
-              className="w-6 h-6 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+              className="w-5 h-5 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-[20px] hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
             >
               +
             </button>
@@ -89,8 +89,26 @@ export default function LandingPage({ user, onLogout }) {
   const [products, setProducts] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [expandedCategories, setExpandedCategories] = useState({})
+  const [categoryLoading, setCategoryLoading] = useState({})
+  const [loadedCategories, setLoadedCategories] = useState({})
   const [errorMsg, setErrorMsg] = useState('')
-  const [cart, setCart] = useState([])
+  const [cart, setCart] = useState(() => {
+    const savedCart = localStorage.getItem('cart')
+    if (savedCart) {
+      try {
+        return JSON.parse(savedCart)
+      } catch (e) {
+        console.error('Error parsing cart from localStorage:', e)
+        return []
+      }
+    }
+    return []
+  })
+
+  // Persist cart to localStorage on changes
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(cart))
+  }, [cart])
   const [view, setView] = useState('list') // 'list' or 'cart'
   const [toasts, setToasts] = useState([])
 
@@ -106,22 +124,32 @@ export default function LandingPage({ user, onLogout }) {
     setToasts(prev => prev.filter(t => t.id !== id))
   }, [])
 
+  const handleLogoutClick = useCallback(() => {
+    const confirmLogout = window.confirm("શું તમે ખરેખર લોગઆઉટ કરવા માંગો છો? લોગઆઉટ કરવાથી તમારા કાર્ટમાં રહેલી તમામ વસ્તુઓ દૂર થઈ જશે.")
+    if (confirmLogout) {
+      onLogout()
+    }
+  }, [onLogout])
+
   const loadData = useCallback(async () => {
     if (isLoading) return
     setIsLoading(true)
     setErrorMsg('')
+    setProducts([])
+    setCategoryLoading({})
+    setLoadedCategories({})
 
     try {
       const login = user?.username || 'admin'
       const password = user?.password || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
 
-      const API_URL = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-        ? 'http://192.168.29.99:8019/send_request'
-        : '/api/send_request'
+      const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
+        ? 'http://192.168.29.99:8019'
+        : '/api'
 
       // 1. Fetch Categories
-      const categoriesUrl = `${API_URL}?model=product.category`
+      const categoriesUrl = `${API_BASE}/send_request?model=product.category`
       const catResponse = await fetch(categoriesUrl, {
         method: 'GET',
         headers: {
@@ -150,9 +178,52 @@ export default function LandingPage({ user, onLogout }) {
         fetchedCategories = catData
       }
 
-      // 2. Fetch Products
-      const productsUrl = `${API_URL}?model=product.template&fields=name,list_price,categ_id`
-      const prodResponse = await fetch(productsUrl, {
+      setCategories(fetchedCategories)
+
+      // Initialize all categories as collapsed (unexpanded) by default
+      const initialExpanded = {}
+      fetchedCategories.forEach(cat => {
+        initialExpanded[cat.id] = false
+      })
+      initialExpanded['uncategorized'] = false
+      setExpandedCategories(initialExpanded)
+
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+      let msg = 'નેટવર્ક ભૂલ. કૃપા કરીને ફરી પ્રયાસ કરો.'
+
+      if (!navigator.onLine) {
+        msg = 'ઇન્ટરનેટ કનેક્શન ઉપલબ્ધ નથી. કૃપા કરીને તમારું કનેક્શન તપાસો.'
+      } else if (error.name === 'TypeError') {
+        msg = 'સર્વર સાથે કનેક્ટ થવામાં નિષ્ફળતા. કૃપા કરીને સર્વર ચાલુ છે કે નહીં તે તપાસો.'
+      } else if (error.message) {
+        msg = `ભૂલ: ${error.message}`
+      }
+
+      setErrorMsg(msg)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [user, onLogout, isLoading])
+
+  // Fetch category-wise products
+  const loadProductsForCategory = useCallback(async (catId) => {
+    if (categoryLoading[catId]) return
+    setCategoryLoading(prev => ({ ...prev, [catId]: true }))
+
+    try {
+      const login = user?.username || 'admin'
+      const password = user?.password || 'admin'
+      const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
+
+      const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
+        ? 'http://192.168.29.99:8019'
+        : '/api'
+
+      const categParam = catId === 'uncategorized' ? 'false' : catId
+      const productsUrl = `${API_BASE}/category_products?model=product.category&categ_id=${categParam}`
+
+      const response = await fetch(productsUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -163,21 +234,21 @@ export default function LandingPage({ user, onLogout }) {
         }
       })
 
-      if (prodResponse.status === 401 || prodResponse.status === 403) {
+      if (response.status === 401 || response.status === 403) {
         onLogout()
         return
       }
 
-      if (!prodResponse.ok) {
+      if (!response.ok) {
         throw new Error('ઉત્પાદનો મેળવવામાં નિષ્ફળતા મળી.')
       }
 
-      const prodData = await prodResponse.json()
+      const data = await response.json()
       let fetchedProducts = []
-      if (prodData && prodData.records && Array.isArray(prodData.records)) {
-        fetchedProducts = prodData.records
-      } else if (Array.isArray(prodData)) {
-        fetchedProducts = prodData
+      if (data && data.records && Array.isArray(data.records)) {
+        fetchedProducts = data.records
+      } else if (Array.isArray(data)) {
+        fetchedProducts = data
       }
 
       // Format products
@@ -202,34 +273,19 @@ export default function LandingPage({ user, onLogout }) {
         }
       })
 
-      setCategories(fetchedCategories)
-      setProducts(formattedProducts)
-
-      // Initialize all categories as collapsed (unexpanded) by default
-      const initialExpanded = {}
-      fetchedCategories.forEach(cat => {
-        initialExpanded[cat.id] = false
+      setProducts(prev => {
+        const filtered = prev.filter(p => p.categoryId !== catId)
+        return [...filtered, ...formattedProducts]
       })
-      initialExpanded['uncategorized'] = false
-      setExpandedCategories(initialExpanded)
 
+      setLoadedCategories(prev => ({ ...prev, [catId]: true }))
     } catch (error) {
-      console.error('Error fetching categories & products:', error)
-      let msg = 'નેટવર્ક ભૂલ. કૃપા કરીને ફરી પ્રયાસ કરો.'
-
-      if (!navigator.onLine) {
-        msg = 'ઇન્ટરનેટ કનેક્શન ઉપલબ્ધ નથી. કૃપા કરીને તમારું કનેક્શન તપાસો.'
-      } else if (error.name === 'TypeError') {
-        msg = 'સર્વર સાથે કનેક્ટ થવામાં નિષ્ફળતા. કૃપા કરીને સર્વર ચાલુ છે કે નહીં તે તપાસો.'
-      } else if (error.message) {
-        msg = `ભૂલ: ${error.message}`
-      }
-
-      setErrorMsg(msg)
+      console.error(`Error fetching products for category ${catId}:`, error)
+      addToast(`શ્રેણીના ઉત્પાદનો લોડ કરવામાં નિષ્ફળતા: ${error.message || 'નેટવર્ક ભૂલ'}`, 'error')
     } finally {
-      setIsLoading(false)
+      setCategoryLoading(prev => ({ ...prev, [catId]: false }))
     }
-  }, [user, onLogout, isLoading])
+  }, [user, onLogout, categoryLoading, addToast])
 
   // Initial load
   useEffect(() => {
@@ -241,12 +297,17 @@ export default function LandingPage({ user, onLogout }) {
   }, [loadData])
 
   // Toggle Category Expansion
-  const toggleCategory = (catId) => {
+  const toggleCategory = useCallback(async (catId) => {
+    const isExpanding = !expandedCategories[catId]
     setExpandedCategories(prev => ({
       ...prev,
-      [catId]: !prev[catId]
+      [catId]: isExpanding
     }))
-  }
+
+    if (isExpanding && !loadedCategories[catId]) {
+      await loadProductsForCategory(catId)
+    }
+  }, [expandedCategories, loadedCategories, loadProductsForCategory])
 
   // Cart Operations
   const handleAddToCart = (product, quantity) => {
@@ -286,12 +347,12 @@ export default function LandingPage({ user, onLogout }) {
   // Group products by category ID
   const productsByCategory = React.useMemo(() => {
     const groups = {}
-    
+
     // Initialize groups for fetched categories
     categories.forEach(cat => {
       groups[cat.id] = []
     })
-    
+
     // Always have an uncategorized group
     groups['uncategorized'] = []
 
@@ -338,6 +399,7 @@ export default function LandingPage({ user, onLogout }) {
   const renderCategoryAccordion = (catId, catName) => {
     const catProducts = productsByCategory[catId] || []
     const isExpanded = expandedCategories[catId]
+    const isCatLoading = categoryLoading[catId]
 
     return (
       <div key={catId} className="space-y-4">
@@ -356,9 +418,6 @@ export default function LandingPage({ user, onLogout }) {
               <h3 className="font-semibold text-zinc-950 dark:text-zinc-50 leading-snug">
                 {catName}
               </h3>
-              <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-medium bg-zinc-50 dark:bg-zinc-950 border border-zinc-150 dark:border-zinc-800/80 px-2 py-0.5 rounded-full inline-block mt-1">
-                {catProducts.length} ઉત્પાદનો
-              </span>
             </div>
           </div>
 
@@ -372,7 +431,13 @@ export default function LandingPage({ user, onLogout }) {
         {/* Collapsible Content - Vertical List */}
         {isExpanded && (
           <div className="pl-6 md:pl-10 pr-2 border-l-2 border-zinc-150 dark:border-zinc-800/80 ml-5 md:ml-6 mt-2 animate-fade-in duration-200">
-            {catProducts.length === 0 ? (
+            {isCatLoading ? (
+              <div className="flex flex-col gap-3">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <div key={`sk-${catId}-${i}`} className="h-16 bg-zinc-100/50 dark:bg-zinc-900/10 border border-zinc-200/50 dark:border-zinc-850/40 rounded-2xl animate-pulse" />
+                ))}
+              </div>
+            ) : catProducts.length === 0 ? (
               <div className="p-8 bg-zinc-50/50 dark:bg-zinc-900/20 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl text-center text-xs text-zinc-450 dark:text-zinc-500 font-medium">
                 આ શ્રેણીમાં કોઈ ઉત્પાદન નથી.
               </div>
@@ -404,7 +469,7 @@ export default function LandingPage({ user, onLogout }) {
           onRemoveItem={handleRemoveItem}
           onEmptyCart={handleEmptyCart}
           onBack={() => setView('list')}
-          onLogout={onLogout}
+          onLogout={handleLogoutClick}
           user={user}
         />
       ) : (
@@ -463,9 +528,9 @@ export default function LandingPage({ user, onLogout }) {
           {!isLoading && (categories.length > 0 || (productsByCategory['uncategorized'] && productsByCategory['uncategorized'].length > 0)) && (
             <section className="space-y-6">
               {categories.map(cat => renderCategoryAccordion(cat.id, cat.name))}
-              
+
               {/* Uncategorized group if not empty */}
-              {productsByCategory['uncategorized'] && productsByCategory['uncategorized'].length > 0 && 
+              {productsByCategory['uncategorized'] && productsByCategory['uncategorized'].length > 0 &&
                 renderCategoryAccordion('uncategorized', 'અન્ય (શ્રેણી વગરનું)')
               }
             </section>
@@ -508,11 +573,10 @@ export default function LandingPage({ user, onLogout }) {
           <button
             type="button"
             onClick={() => setView(view === 'cart' ? 'list' : 'cart')}
-            className={`relative p-2.5 border rounded-xl transition-all cursor-pointer flex items-center justify-center ${
-              view === 'cart'
-                ? 'border-purple-600 text-purple-650 bg-purple-50/50 dark:border-purple-500/30 dark:text-purple-400 dark:bg-purple-950/20'
-                : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-850'
-            }`}
+            className={`relative p-2.5 border rounded-xl transition-all cursor-pointer flex items-center justify-center ${view === 'cart'
+              ? 'border-purple-600 text-purple-650 bg-purple-50/50 dark:border-purple-500/30 dark:text-purple-400 dark:bg-purple-950/20'
+              : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-850'
+              }`}
             title="કાર્ટ જુઓ"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -542,7 +606,7 @@ export default function LandingPage({ user, onLogout }) {
               </p>
             </div>
             <button
-              onClick={onLogout}
+              onClick={handleLogoutClick}
               className="px-3.5 py-2 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:border-rose-200 dark:hover:border-rose-900/30 hover:bg-rose-50/40 dark:hover:bg-rose-950/10 rounded-xl text-xs font-medium transition-all flex items-center gap-2"
               title="Log out"
             >
@@ -585,7 +649,7 @@ export default function LandingPage({ user, onLogout }) {
                 {toast.message}
               </p>
             </div>
-            
+
             <button
               type="button"
               onClick={() => removeToast(toast.id)}
