@@ -4,19 +4,15 @@ import PullToRefresh from 'react-simple-pull-to-refresh'
 import CartPage from './CartPage'
 
 // ProductCard sub-component to manage its own local quantity selector
-function ProductCard({ product, onAddToCart, getAvatarGradient, getInitials }) {
-  const [quantity, setQuantity] = useState(1)
-
-  const handleIncrement = (e) => {
-    e.stopPropagation()
-    setQuantity(q => q + 1)
-  }
-
-  const handleDecrement = (e) => {
-    e.stopPropagation()
-    setQuantity(q => Math.max(1, q - 1))
-  }
-
+function ProductCard({
+  product,
+  cartQuantity = 0,
+  onAddToCart,
+  onUpdateQuantity,
+  onRemoveItem,
+  getAvatarGradient,
+  getInitials
+}) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-zinc-50/65 dark:bg-zinc-950/20 border border-zinc-200/50 dark:border-zinc-850/40 rounded-2xl gap-3 hover:shadow-sm hover:border-purple-300/40 dark:hover:border-purple-900/30 transition-all duration-300 w-full select-none">
       <div className="flex items-center gap-3">
@@ -45,39 +41,51 @@ function ProductCard({ product, onAddToCart, getAvatarGradient, getInitials }) {
 
         {/* Quantity Controls and Add to Cart Button */}
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center bg-white dark:bg-zinc-950 border border-zinc-200/50 dark:border-zinc-850 p-1 rounded-lg">
+          {cartQuantity > 0 ? (
+            <div className="flex items-center bg-white dark:bg-zinc-950 border border-zinc-200/50 dark:border-zinc-850 p-1 rounded-lg">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (cartQuantity === 1) {
+                    onRemoveItem(product.id)
+                  } else {
+                    onUpdateQuantity(product.id, cartQuantity - 1)
+                  }
+                }}
+                className="w-5 h-5 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+              >
+                -
+              </button>
+              <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-50 px-1.5 min-w-[14px] text-center">
+                {cartQuantity}
+              </span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onUpdateQuantity(product.id, cartQuantity + 1)
+                }}
+                className="w-5 h-5 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+              >
+                +
+              </button>
+            </div>
+          ) : (
             <button
               type="button"
-              onClick={handleDecrement}
-              className="w-5 h-5 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-[20px] hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation()
+                onAddToCart(product, 1)
+              }}
+              className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white text-xs font-semibold rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-1"
             >
-              -
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+              </svg>
+              <span>ઉમેરો</span>
             </button>
-            <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-50 px-1.5 min-w-[14px] text-center">
-              {quantity}
-            </span>
-            <button
-              type="button"
-              onClick={handleIncrement}
-              className="w-5 h-5 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-[20px] hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
-            >
-              +
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              onAddToCart(product, quantity)
-              setQuantity(1) // Reset local counter
-            }}
-            className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white text-xs font-semibold rounded-lg shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center justify-center gap-1"
-          >
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-            </svg>
-            <span>ઉમેરો</span>
-          </button>
+          )}
         </div>
       </div>
     </div>
@@ -401,27 +409,43 @@ export default function LandingPage({ user, onLogout }) {
     const isExpanded = expandedCategories[catId]
     const isCatLoading = categoryLoading[catId]
 
+    const headerBgClass = isExpanded
+      ? "bg-zinc-900 dark:bg-white border-zinc-800/60 dark:border-zinc-200/60"
+      : "bg-white dark:bg-zinc-900 border-zinc-200/60 dark:border-zinc-800/60"
+
+    const titleTextClass = isExpanded
+      ? "text-zinc-50 dark:text-zinc-950"
+      : "text-zinc-950 dark:text-zinc-50"
+
+    const iconWrapperClass = isExpanded
+      ? "bg-purple-950/40 dark:bg-purple-50 border-purple-900/30 dark:border-purple-100 text-purple-400 dark:text-purple-600"
+      : "bg-purple-50 dark:bg-purple-950/40 border-purple-100 dark:border-purple-900/30 text-purple-600 dark:text-purple-400"
+
+    const arrowClass = isExpanded
+      ? "text-zinc-400 dark:text-zinc-500"
+      : "text-zinc-500 dark:text-zinc-400"
+
     return (
       <div key={catId} className="space-y-4">
         {/* Accordion Header */}
         <div
           onClick={() => toggleCategory(catId)}
-          className="flex items-center justify-between p-5 bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 rounded-3xl cursor-pointer hover:shadow-md hover:border-purple-300 dark:hover:border-purple-900/40 transition-all duration-300 select-none"
+          className={`flex items-center justify-between p-5 ${headerBgClass} border rounded-3xl cursor-pointer hover:shadow-md hover:border-purple-300 dark:hover:border-purple-900/40 transition-all duration-300 select-none`}
         >
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
+            <div className={`w-10 h-10 rounded-xl ${iconWrapperClass} border flex items-center justify-center`}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 012.008 1.24l.885 1.77a2.25 2.25 0 002.007 1.24h1.98a2.25 2.25 0 002.007-1.24l.885-1.77a2.25 2.25 0 012.007-1.24h3.86m-18 0h18a2.25 2.25 0 012.25 2.25v4.5A2.25 2.25 0 0118 21H6a2.25 2.25 0 01-2.25-2.25V15.75a2.25 2.25 0 012.25-2.25zm0-4.5h18a2.25 2.25 0 012.25 2.25v6.75a2.25 2.25 0 01-2.25 2.25H3.75a2.25 2.25 0 01-2.25-2.25V11.25a2.25 2.25 0 012.25-2.25z" />
               </svg>
             </div>
             <div>
-              <h3 className="font-semibold text-zinc-950 dark:text-zinc-50 leading-snug">
+              <h3 className={`font-semibold ${titleTextClass} leading-snug`}>
                 {catName}
               </h3>
             </div>
           </div>
 
-          <div className={`transform transition-transform duration-300 text-zinc-500 dark:text-zinc-400 ${isExpanded ? 'rotate-180' : ''}`}>
+          <div className={`transform transition-transform duration-300 ${arrowClass} ${isExpanded ? 'rotate-180' : ''}`}>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
             </svg>
@@ -443,15 +467,22 @@ export default function LandingPage({ user, onLogout }) {
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                {catProducts.map(product => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onAddToCart={handleAddToCart}
-                    getAvatarGradient={getAvatarGradient}
-                    getInitials={getInitials}
-                  />
-                ))}
+                {catProducts.map(product => {
+                  const cartItem = cart.find(item => item.id === product.id)
+                  const cartQuantity = cartItem ? cartItem.quantity : 0
+                  return (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      cartQuantity={cartQuantity}
+                      onAddToCart={handleAddToCart}
+                      onUpdateQuantity={handleUpdateQuantity}
+                      onRemoveItem={handleRemoveItem}
+                      getAvatarGradient={getAvatarGradient}
+                      getInitials={getInitials}
+                    />
+                  )
+                })}
               </div>
             )}
           </div>

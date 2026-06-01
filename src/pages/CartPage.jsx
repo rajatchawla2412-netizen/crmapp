@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Capacitor } from '@capacitor/core'
 
 export default function CartPage({
   cart,
@@ -11,13 +12,74 @@ export default function CartPage({
 }) {
   const [isEditing, setIsEditing] = useState(false)
   const [showOrderConfirm, setShowOrderConfirm] = useState(false)
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
 
   // Calculations
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
   const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
-  const handlePlaceOrder = () => {
-    setShowOrderConfirm(true)
+  const handlePlaceOrder = async () => {
+    if (isPlacingOrder) return
+    setIsPlacingOrder(true)
+    setErrorMsg('')
+
+    try {
+      const login = user?.username || 'admin'
+      const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
+      const partnerId = Number(user?.partner_id || 9)
+
+      const API_URL = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
+        ? 'http://192.168.29.99:8019/create_order'
+        : '/api/create_order'
+
+      const orderLines = cart.map(item => ({
+        product_id: Number(item.id),
+        product_uom_qty: Number(item.quantity),
+        price_unit: Number(item.price)
+      }))
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'login': login,
+          'api-key': apiKey,
+          'lang': 'gu'
+        },
+        body: JSON.stringify({
+          partner_id: partnerId,
+          order_lines: orderLines
+        })
+      })
+
+      if (response.status === 401 || response.status === 403) {
+        onLogout()
+        return
+      }
+
+      let responseData = {}
+      const contentType = response.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        responseData = await response.json()
+      } else {
+        const text = await response.text()
+        console.error('Non-JSON response:', text)
+        const cleanText = text.replace(/<[^>]*>/g, '').trim().substring(0, 300)
+        throw new Error(cleanText || 'સર્વર તરફથી અમાન્ય પ્રતિસાદ મળ્યો (Non-JSON).')
+      }
+
+      if (response.ok && responseData.status === 'success') {
+        setShowOrderConfirm(true)
+      } else {
+        throw new Error(responseData.message || 'ઓર્ડર મોકલવામાં સમસ્યા આવી.')
+      }
+    } catch (err) {
+      console.error('Error placing order:', err)
+      setErrorMsg(err.message || 'ઓર્ડર મોકલવામાં નિષ્ફળતા. કૃપા કરીને ફરી પ્રયાસ કરો.')
+    } finally {
+      setIsPlacingOrder(false)
+    }
   }
 
   const handleCloseConfirm = () => {
@@ -105,11 +167,10 @@ export default function CartPage({
               <button
                 type="button"
                 onClick={() => setIsEditing(!isEditing)}
-                className={`px-4 py-2 border rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  isEditing
+                className={`px-4 py-2 border rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${isEditing
                     ? 'border-purple-600 text-purple-650 bg-purple-50/50 dark:border-purple-500/30 dark:text-purple-400 dark:bg-purple-950/20'
                     : 'border-zinc-200 dark:border-zinc-800 text-zinc-650 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-850'
-                }`}
+                  }`}
               >
                 {isEditing ? (
                   <>
@@ -192,7 +253,7 @@ export default function CartPage({
                             +
                           </button>
                         </div>
-                        
+
                         <button
                           type="button"
                           onClick={() => onRemoveItem(item.id)}
@@ -226,6 +287,16 @@ export default function CartPage({
               ))}
             </div>
 
+            {/* Error Message */}
+            {errorMsg && (
+              <div className="p-4 rounded-xl text-sm border flex items-start gap-3 transition-all duration-300 bg-rose-50/60 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900/30 text-rose-850 dark:text-rose-350">
+                <svg className="w-5 h-5 flex-shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
             {/* Cart Summary Card */}
             <div className="p-6 bg-zinc-50 dark:bg-zinc-950 border border-zinc-150 dark:border-zinc-850 rounded-3xl mt-8 space-y-4">
               <div className="flex items-center justify-between text-zinc-600 dark:text-zinc-400 text-xs">
@@ -243,12 +314,25 @@ export default function CartPage({
                 <button
                   type="button"
                   onClick={handlePlaceOrder}
-                  className="w-full py-3 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white font-semibold rounded-2xl shadow-md shadow-purple-500/10 hover:shadow-purple-500/20 transition-all text-xs cursor-pointer flex items-center justify-center gap-2"
+                  disabled={isPlacingOrder}
+                  className="w-full py-3 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white font-semibold rounded-2xl shadow-md shadow-purple-500/10 hover:shadow-purple-500/20 transition-all text-xs cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  ઓર્ડર આપો (Place Order)
+                  {isPlacingOrder ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>ઓર્ડર મોકલાઈ રહ્યો છે...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>ઓર્ડર આપો (Place Order)</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
