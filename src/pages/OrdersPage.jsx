@@ -7,7 +7,7 @@ import PullToRefresh from 'react-simple-pull-to-refresh'
 // Small sub-component for product line images with fallback initials
 function OrderProductImage({ src, name }) {
   const [hasError, setHasError] = useState(false)
-  
+
   const getInitials = (n) => {
     if (!n) return '?'
     const parts = n.trim().split(/\s+/)
@@ -17,7 +17,48 @@ function OrderProductImage({ src, name }) {
     return n.slice(0, 2).toUpperCase()
   }
 
-  if (!src || hasError) {
+  const formatImageSrc = (img) => {
+    if (!img) return null;
+    if (img.startsWith('data:') || img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/') || img.startsWith('blob:')) {
+      return img;
+    }
+    
+    let cleanImg = img.trim().replace(/\s/g, '');
+    
+    // Strip Python byte string wrapper b'...'
+    if (cleanImg.startsWith("b'") && cleanImg.endsWith("'")) {
+      cleanImg = cleanImg.slice(2, -1);
+    }
+    
+    // Check for double base64 encoding
+    try {
+      const decodedOnce = atob(cleanImg);
+      const cleanDecoded = decodedOnce.trim().replace(/\s/g, '');
+      if (/^[A-Za-z0-9+/=]+$/.test(cleanDecoded) && cleanDecoded.length > 0) {
+        cleanImg = cleanDecoded;
+      }
+    } catch (e) {
+      // Keep single-encoded image
+    }
+
+    let mimeType = 'png';
+    if (cleanImg.startsWith('/9j/')) {
+      mimeType = 'jpeg';
+    } else if (cleanImg.startsWith('iVBORw0KGgo')) {
+      mimeType = 'png';
+    } else if (cleanImg.startsWith('R0lGOD')) {
+      mimeType = 'gif';
+    } else if (cleanImg.startsWith('UklGR')) {
+      mimeType = 'webp';
+    } else if (cleanImg.startsWith('PHN2Zy')) {
+      mimeType = 'svg+xml';
+    }
+    return `data:image/${mimeType};base64,${cleanImg}`;
+  }
+
+  const imageSrc = formatImageSrc(src);
+
+  if (!imageSrc || hasError) {
     return (
       <div className="w-8.5 h-8.5 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-500 dark:text-zinc-400 font-bold text-[10px] select-none">
         {getInitials(name)}
@@ -27,7 +68,7 @@ function OrderProductImage({ src, name }) {
 
   return (
     <img
-      src={src}
+      src={imageSrc}
       alt={name}
       onError={() => setHasError(true)}
       className="w-8.5 h-8.5 object-contain rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800"
@@ -38,17 +79,18 @@ function OrderProductImage({ src, name }) {
 export default function OrdersPage({ user, onLogout }) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const { addToast } = useOutletContext()
+  const { addToast, editingOrder, startEditingOrder, discardEditingOrder } = useOutletContext()
   const [orders, setOrders] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [confirmCancelOrderId, setConfirmCancelOrderId] = useState(null)
   const [isCancelling, setIsCancelling] = useState(false)
+  const [pendingEditOrder, setPendingEditOrder] = useState(null)
 
   const fetchOrders = useCallback(async () => {
     setIsLoading(true)
     setErrorMsg('')
-    
+
     try {
       const login = user?.username || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
@@ -150,6 +192,26 @@ export default function OrdersPage({ user, onLogout }) {
     } finally {
       setIsCancelling(false)
       setConfirmCancelOrderId(null)
+    }
+  }
+
+  const handleEditClick = (order) => {
+    if (editingOrder && editingOrder.order_id !== order.order_id) {
+      setPendingEditOrder(order)
+    } else {
+      startEditingOrder(order)
+      addToast(t('edit_order_banner', { orderNumber: order.order_number }), 'success')
+      navigate('/cart')
+    }
+  }
+
+  const handleConfirmConflict = () => {
+    if (pendingEditOrder) {
+      discardEditingOrder()
+      startEditingOrder(pendingEditOrder)
+      addToast(t('edit_order_banner', { orderNumber: pendingEditOrder.order_number }), 'success')
+      setPendingEditOrder(null)
+      navigate('/cart')
     }
   }
 
@@ -270,7 +332,7 @@ export default function OrdersPage({ user, onLogout }) {
                   <p className="text-[10px] text-zinc-450 dark:text-zinc-500 font-bold uppercase tracking-wider mb-2">
                     {t('order_details')}
                   </p>
-                  
+
                   <div className="divide-y divide-zinc-150 dark:divide-zinc-850">
                     {order.order_lines.map((line, idx) => (
                       <div
@@ -315,6 +377,7 @@ export default function OrdersPage({ user, onLogout }) {
                   <div className="flex items-center justify-end gap-2 mt-1">
                     <button
                       type="button"
+                      onClick={() => handleEditClick(order)}
                       className="px-3.5 py-1.5 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-850 rounded-lg text-[11px] dark:hover:text-black font-bold transition-all cursor-pointer"
                     >
                       {t('edit_btn')}
@@ -386,6 +449,45 @@ export default function OrdersPage({ user, onLogout }) {
                   <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                 ) : null}
                 <span>{t('cancel_btn')}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Order Conflict Modal */}
+      {pendingEditOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/40 backdrop-blur-sm animate-fade-in text-left">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-sm w-full p-6 shadow-xl space-y-4 text-center">
+            <div className="mx-auto w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-450">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+                {t('edit_btn')}
+              </h3>
+              <p className="text-sm text-zinc-555 dark:text-zinc-400">
+                {t('edit_order_conflict')}
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setPendingEditOrder(null)}
+                className="flex-1 px-4 py-2.5 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-white dark:hover:text-black hover:bg-zinc-50 dark:hover:bg-zinc-850 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+              >
+                {t('go_back')}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmConflict}
+                className="flex-1 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold transition-all cursor-pointer"
+              >
+                {t('discard_changes')}
               </button>
             </div>
           </div>

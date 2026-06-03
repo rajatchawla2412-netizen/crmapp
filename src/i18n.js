@@ -84,7 +84,15 @@ const resources = {
       cancel_btn: "Cancel",
       cancel_order_confirm: "Are you sure you want to cancel this order?",
       order_cancelled: "Order cancelled successfully.",
-      cancel_failed: "Failed to cancel order."
+      cancel_failed: "Failed to cancel order.",
+      edit_order_banner: "You are currently editing Order: {{orderNumber}}",
+      save_changes: "Save Changes",
+      discard_changes: "Discard Changes",
+      discard_edit_confirm: "Are you sure you want to discard your changes? This will empty your cart.",
+      saving_changes: "Saving Changes...",
+      order_updated_success: "Order updated successfully.",
+      edit_order_conflict: "You are currently editing another order. Do you want to discard those changes and edit this order instead?",
+      editing_order_cart_notice: "You are currently editing Order: {{orderNumber}}. Your changes will be saved to this order when you check out."
     }
   },
   gu: {
@@ -170,7 +178,15 @@ const resources = {
       cancel_btn: "રદ કરો",
       cancel_order_confirm: "શું તમે ખરેખર આ ઓર્ડર રદ કરવા માંગો છો?",
       order_cancelled: "ઓર્ડર સફળતાપૂર્વક રદ કરવામાં આવ્યો.",
-      cancel_failed: "ઓર્ડર રદ કરવામાં નિષ્ફળતા."
+      cancel_failed: "ઓર્ડર રદ કરવામાં નિષ્ફળતા.",
+      edit_order_banner: "તમે હાલમાં ઓર્ડર સુધારી રહ્યા છો: {{orderNumber}}",
+      save_changes: "ફેરફારો સાચવો",
+      discard_changes: "ફેરફારો રદ કરો",
+      discard_edit_confirm: "શું તમે ખરેખર તમારા ફેરફારો રદ કરવા માંગો છો? આનાથી કાર્ટ ખાલી થઈ જશે.",
+      saving_changes: "ફેરફારો સાચવવામાં આવી રહ્યા છે...",
+      order_updated_success: "ઓર્ડર સફળતાપૂર્વક અપડેટ કરવામાં આવ્યો.",
+      edit_order_conflict: "તમે હાલમાં બીજો ઓર્ડર સુધારી રહ્યા છો. શું તમે તે ફેરફારો રદ કરીને આ ઓર્ડર સુધારવા માંગો છો?",
+      editing_order_cart_notice: "તમે હાલમાં ઓર્ડર સુધારી રહ્યા છો: {{orderNumber}}. જ્યારે તમે ચેકઆઉટ કરશો ત્યારે તમારા ફેરફારો આ ઓર્ડરમાં સાચવવામાં આવશે."
     }
   }
 };

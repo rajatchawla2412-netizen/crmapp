@@ -15,7 +15,48 @@ function CartProductImage({ src, name }) {
     return n.slice(0, 2).toUpperCase()
   }
 
-  if (!src || hasError) {
+  const formatImageSrc = (img) => {
+    if (!img) return null;
+    if (img.startsWith('data:') || img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/') || img.startsWith('blob:')) {
+      return img;
+    }
+    
+    let cleanImg = img.trim().replace(/\s/g, '');
+    
+    // Strip Python byte string wrapper b'...'
+    if (cleanImg.startsWith("b'") && cleanImg.endsWith("'")) {
+      cleanImg = cleanImg.slice(2, -1);
+    }
+    
+    // Check for double base64 encoding
+    try {
+      const decodedOnce = atob(cleanImg);
+      const cleanDecoded = decodedOnce.trim().replace(/\s/g, '');
+      if (/^[A-Za-z0-9+/=]+$/.test(cleanDecoded) && cleanDecoded.length > 0) {
+        cleanImg = cleanDecoded;
+      }
+    } catch (e) {
+      // Keep single-encoded image
+    }
+
+    let mimeType = 'png';
+    if (cleanImg.startsWith('/9j/')) {
+      mimeType = 'jpeg';
+    } else if (cleanImg.startsWith('iVBORw0KGgo')) {
+      mimeType = 'png';
+    } else if (cleanImg.startsWith('R0lGOD')) {
+      mimeType = 'gif';
+    } else if (cleanImg.startsWith('UklGR')) {
+      mimeType = 'webp';
+    } else if (cleanImg.startsWith('PHN2Zy')) {
+      mimeType = 'svg+xml';
+    }
+    return `data:image/${mimeType};base64,${cleanImg}`;
+  }
+
+  const imageSrc = formatImageSrc(src);
+
+  if (!imageSrc || hasError) {
     return (
       <div className="w-10 h-10 rounded-lg bg-zinc-150 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-700 dark:text-zinc-400 font-bold text-xs select-none shadow-inner">
         {getInitials(name)}
@@ -25,7 +66,7 @@ function CartProductImage({ src, name }) {
 
   return (
     <img
-      src={src}
+      src={imageSrc}
       alt={name}
       onError={() => setHasError(true)}
       className="w-10 h-10 object-contain rounded-lg bg-zinc-50/50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-850"
@@ -43,11 +84,12 @@ export default function CartPage({
 }) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const { addToast } = useOutletContext()
+  const { addToast, editingOrder, saveEditedOrder } = useOutletContext()
   
   const [isEditing, setIsEditing] = useState(false)
   const [showOrderConfirm, setShowOrderConfirm] = useState(false)
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
   // Calculations
@@ -117,6 +159,22 @@ export default function CartPage({
     }
   }
 
+  const handleSaveEdit = async () => {
+    if (isSavingEdit) return
+    setIsSavingEdit(true)
+    setErrorMsg('')
+    try {
+      await saveEditedOrder()
+      addToast(t('order_updated_success'), 'success')
+      navigate('/orders')
+    } catch (err) {
+      console.error('Error saving order edits:', err)
+      setErrorMsg(err.message || t('order_error_default'))
+    } finally {
+      setIsSavingEdit(false)
+    }
+  }
+
   const handleCloseConfirm = () => {
     setShowOrderConfirm(false)
     onEmptyCart()
@@ -158,6 +216,15 @@ export default function CartPage({
             </svg>
           </button>
         </div>
+
+        {editingOrder && (
+          <div className="p-4 rounded-xl text-xs border flex items-start gap-3 transition-all duration-300 bg-amber-50/60 dark:bg-amber-950/20 border-amber-200/50 dark:border-amber-900/30 text-amber-800 dark:text-amber-300 text-left">
+            <svg className="w-5 h-5 flex-shrink-0 text-amber-600 dark:text-amber-400 mt-0.5 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+            <span>{t('editing_order_cart_notice', { orderNumber: editingOrder.order_number })}</span>
+          </div>
+        )}
 
         {cart.length === 0 ? (
           /* Empty state */
@@ -335,29 +402,55 @@ export default function CartPage({
               </div>
 
               <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={handlePlaceOrder}
-                  disabled={isPlacingOrder}
-                  className="w-full py-3 bg-[#6941c6] hover:bg-[#5b37ad] text-white font-semibold rounded-xl transition-all shadow-sm hover:shadow-md text-xs cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isPlacingOrder ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <span>{t('placing_order')}</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>{t('place_order')}</span>
-                    </>
-                  )}
-                </button>
+                {editingOrder ? (
+                  <button
+                    type="button"
+                    onClick={handleSaveEdit}
+                    disabled={isSavingEdit}
+                    className="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl transition-all shadow-sm hover:shadow-md text-xs cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSavingEdit ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>{t('saving_changes')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{t('save_changes')}</span>
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handlePlaceOrder}
+                    disabled={isPlacingOrder}
+                    className="w-full py-3 bg-[#6941c6] hover:bg-[#5b37ad] text-white font-semibold rounded-xl transition-all shadow-sm hover:shadow-md text-xs cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isPlacingOrder ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>{t('placing_order')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{t('place_order')}</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           </div>

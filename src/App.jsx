@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { Capacitor } from '@capacitor/core'
+import i18n from './i18n'
 import LoginPage from './pages/LoginPage'
 import LandingPage from './pages/LandingPage'
 import CategoriesPage from './pages/CategoriesPage'
@@ -23,6 +25,18 @@ function App() {
     }
     return []
   })
+  const [editingOrder, setEditingOrder] = useState(() => {
+    const saved = localStorage.getItem('editingOrder')
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch (e) {
+        console.error('Error parsing editingOrder from localStorage:', e)
+        return null
+      }
+    }
+    return null
+  })
 
   // Load user session from localStorage on mount
   useEffect(() => {
@@ -44,6 +58,15 @@ function App() {
     localStorage.setItem('cart', JSON.stringify(cart))
   }, [cart])
 
+  // Persist editingOrder to localStorage on changes
+  useEffect(() => {
+    if (editingOrder) {
+      localStorage.setItem('editingOrder', JSON.stringify(editingOrder))
+    } else {
+      localStorage.removeItem('editingOrder')
+    }
+  }, [editingOrder])
+
   const handleLoginSuccess = (userData) => {
     setUser(userData)
     setIsLoggedIn(true)
@@ -56,7 +79,108 @@ function App() {
     localStorage.removeItem('user')
     localStorage.removeItem('api-key')
     localStorage.removeItem('cart')
+    localStorage.removeItem('editingOrder')
     setCart([])
+    setEditingOrder(null)
+  }
+
+  const startEditingOrder = (order) => {
+    setEditingOrder(order)
+    const mappedCart = (order.order_lines || []).map(line => ({
+      id: line.product_id,
+      lineId: line.id,
+      name: line.product_name,
+      price: line.price_unit,
+      quantity: line.qty,
+      category: line.uom || 'Units',
+      image: line.image
+    }))
+    setCart(mappedCart)
+  }
+
+  const discardEditingOrder = () => {
+    setEditingOrder(null)
+    setCart([])
+  }
+
+  const handleSaveEditedOrder = async () => {
+    if (!editingOrder) return
+
+    const login = user?.username || 'admin'
+    const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
+    const partnerId = Number(user?.partner_id || editingOrder.partner_id || editingOrder.customer_id || 9)
+    const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
+      ? 'http://192.168.29.99:8019'
+      : '/api'
+
+    const url = `${API_BASE}/edit_order`
+
+    // Determine deleted line IDs: lines in the original order that are NOT in the current cart
+    const originalLineIds = (editingOrder.order_lines || []).map(l => l.id).filter(Boolean)
+    const currentCartLineIds = cart.map(item => item.lineId).filter(Boolean)
+    const delete_line_ids = originalLineIds.filter(id => !currentCartLineIds.includes(id))
+
+    // Formulate the order lines parameter
+    const order_lines = cart.map(item => {
+      if (item.lineId) {
+        // Changing an existing line
+        return {
+          line_id: item.lineId,
+          product_uom_qty: Number(item.quantity),
+          price_unit: Number(item.price),
+          product_uom_id: 1
+        }
+      } else {
+        // Adding a new product
+        return {
+          product_id: Number(item.id),
+          product_uom_qty: Number(item.quantity),
+          price_unit: Number(item.price),
+          product_uom_id: 1
+        }
+      }
+    })
+
+    const payload = {
+      order_id: Number(editingOrder.order_id),
+      partner_id: partnerId,
+      order_lines,
+      delete_line_ids
+    }
+
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'login': login,
+        'api-key': apiKey,
+        'lang': i18n.language === 'gu' ? 'gu' : 'en'
+      },
+      body: JSON.stringify(payload)
+    })
+
+    if (response.status === 401 || response.status === 403) {
+      handleLogout()
+      throw new Error('Unauthorized')
+    }
+
+    let responseData = {}
+    const contentType = response.headers.get('content-type')
+    if (contentType && contentType.includes('application/json')) {
+      responseData = await response.json()
+    } else {
+      const text = await response.text()
+      console.error('Non-JSON response:', text)
+      throw new Error('Invalid server response')
+    }
+
+    if (response.ok && responseData.status === 'success') {
+      setEditingOrder(null)
+      setCart([])
+      return responseData
+    } else {
+      throw new Error(responseData.message || 'Failed to update order')
+    }
   }
 
   const handleAddToCart = (product, quantity) => {
@@ -105,7 +229,18 @@ function App() {
         {/* Authenticated Routes with Shared Layout */}
         <Route 
           path="/" 
-          element={isLoggedIn ? <LandingPage user={user} onLogout={handleLogout} cart={cart} /> : <Navigate to="/login" replace />}
+          element={isLoggedIn ? (
+            <LandingPage 
+              user={user} 
+              onLogout={handleLogout} 
+              cart={cart} 
+              editingOrder={editingOrder}
+              startEditingOrder={startEditingOrder}
+              discardEditingOrder={discardEditingOrder}
+              onSaveEditedOrder={handleSaveEditedOrder}
+              onDiscardEditedOrder={discardEditingOrder}
+            />
+          ) : <Navigate to="/login" replace />}
         >
           <Route index element={<CategoriesPage user={user} onLogout={handleLogout} />} />
           <Route 

@@ -16,7 +16,48 @@ function ProductImage({ src, name }) {
     return n.slice(0, 2).toUpperCase()
   }
 
-  if (!src || hasError) {
+  const formatImageSrc = (img) => {
+    if (!img) return null;
+    if (img.startsWith('data:') || img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/') || img.startsWith('blob:')) {
+      return img;
+    }
+    
+    let cleanImg = img.trim().replace(/\s/g, '');
+    
+    // Strip Python byte string wrapper b'...'
+    if (cleanImg.startsWith("b'") && cleanImg.endsWith("'")) {
+      cleanImg = cleanImg.slice(2, -1);
+    }
+    
+    // Check for double base64 encoding
+    try {
+      const decodedOnce = atob(cleanImg);
+      const cleanDecoded = decodedOnce.trim().replace(/\s/g, '');
+      if (/^[A-Za-z0-9+/=]+$/.test(cleanDecoded) && cleanDecoded.length > 0) {
+        cleanImg = cleanDecoded;
+      }
+    } catch (e) {
+      // Keep single-encoded image
+    }
+
+    let mimeType = 'png';
+    if (cleanImg.startsWith('/9j/')) {
+      mimeType = 'jpeg';
+    } else if (cleanImg.startsWith('iVBORw0KGgo')) {
+      mimeType = 'png';
+    } else if (cleanImg.startsWith('R0lGOD')) {
+      mimeType = 'gif';
+    } else if (cleanImg.startsWith('UklGR')) {
+      mimeType = 'webp';
+    } else if (cleanImg.startsWith('PHN2Zy')) {
+      mimeType = 'svg+xml';
+    }
+    return `data:image/${mimeType};base64,${cleanImg}`;
+  }
+
+  const imageSrc = formatImageSrc(src);
+
+  if (!imageSrc || hasError) {
     return (
       <div className="w-full aspect-square bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl flex items-center justify-center text-zinc-400 dark:text-zinc-500 font-bold text-lg select-none">
         {getInitials(name)}
@@ -26,7 +67,7 @@ function ProductImage({ src, name }) {
 
   return (
     <img
-      src={src}
+      src={imageSrc}
       alt={name}
       onError={() => setHasError(true)}
       className="w-full aspect-square object-contain rounded-xl bg-zinc-50/50 dark:bg-zinc-900/50"
@@ -221,7 +262,7 @@ export default function ProductsPage({
               >
                 {/* Product Image section */}
                 <div className="w-full aspect-square flex items-center justify-center overflow-hidden flex-shrink-0">
-                  <ProductImage src={`${product.image}?v=1`} name={product.name} />
+                  <ProductImage src={product.image} name={product.name} />
                 </div>
 
                 {/* Product Details Section */}
