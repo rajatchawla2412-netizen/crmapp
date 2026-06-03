@@ -95,12 +95,13 @@ export default function CategoriesPage({ user, onLogout }) {
         : '/api'
 
       const categoriesUrl = `${API_BASE}/category_list`
+      // Always fetch in English first to ensure image data is loaded
       const catResponse = await fetch(categoriesUrl, {
         method: 'GET',
         headers: {
           'login': login,
           'api-key': apiKey,
-          'lang': i18n.language === 'gu' ? 'gu' : 'en'
+          'lang': 'en'
         }
       })
 
@@ -119,6 +120,43 @@ export default function CategoriesPage({ user, onLogout }) {
         fetchedCategories = catData.records
       } else if (Array.isArray(catData)) {
         fetchedCategories = catData
+      }
+
+      // If the app language is Gujarati, fetch the translation for names and merge them
+      if (i18n.language === 'gu') {
+        try {
+          const guResponse = await fetch(categoriesUrl, {
+            method: 'GET',
+            headers: {
+              'login': login,
+              'api-key': apiKey,
+              'lang': 'gu'
+            }
+          })
+          if (guResponse.ok) {
+            const guData = await guResponse.json()
+            let guRecords = []
+            if (guData && guData.records && Array.isArray(guData.records)) {
+              guRecords = guData.records
+            } else if (Array.isArray(guData)) {
+              guRecords = guData
+            }
+
+            fetchedCategories = fetchedCategories.map(cat => {
+              const matchedGu = guRecords.find(r => String(r.id) === String(cat.id))
+              if (matchedGu) {
+                return {
+                  ...cat,
+                  name: matchedGu.name || cat.name,
+                  display_name: matchedGu.display_name || cat.display_name
+                }
+              }
+              return cat
+            })
+          }
+        } catch (guErr) {
+          console.error('Error fetching Gujarati categories, falling back to English names:', guErr)
+        }
       }
 
       setCategories(fetchedCategories)
