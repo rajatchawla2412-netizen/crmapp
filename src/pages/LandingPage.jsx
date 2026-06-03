@@ -54,10 +54,10 @@ export default function LandingPage({
 
   const mainContent = (
     <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-10 md:py-12 flex flex-col gap-8">
-      <Outlet context={{ 
-        addToast, 
-        editingOrder, 
-        startEditingOrder, 
+      <Outlet context={{
+        addToast,
+        editingOrder,
+        startEditingOrder,
         discardEditingOrder,
         saveEditedOrder: onSaveEditedOrder
       }} />
@@ -117,11 +117,10 @@ export default function LandingPage({
             className="pointer-events-auto bg-zinc-950/90 dark:bg-zinc-900/90 text-zinc-50 border border-zinc-800/80 rounded-xl p-4 shadow-xl flex items-center justify-between gap-3 animate-slide-in backdrop-blur-md"
           >
             <div className="flex items-center gap-3">
-              <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                toast.type === 'error'
+              <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${toast.type === 'error'
                   ? 'bg-rose-500/20 border border-rose-500/30 text-rose-400'
                   : 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
-              }`}>
+                }`}>
                 {toast.type === 'error' ? (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

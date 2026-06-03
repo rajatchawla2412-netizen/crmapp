@@ -21,14 +21,14 @@ function ProductImage({ src, name }) {
     if (img.startsWith('data:') || img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/') || img.startsWith('blob:')) {
       return img;
     }
-    
+
     let cleanImg = img.trim().replace(/\s/g, '');
-    
+
     // Strip Python byte string wrapper b'...'
     if (cleanImg.startsWith("b'") && cleanImg.endsWith("'")) {
       cleanImg = cleanImg.slice(2, -1);
     }
-    
+
     // Check for double base64 encoding
     try {
       const decodedOnce = atob(cleanImg);
@@ -90,10 +90,60 @@ export default function ProductsPage({
   const { addToast } = useOutletContext()
 
   // Retrieve category info from state or reconstruct a simple fallback
+
   const selectedCategory = location.state?.category || {
     id: categoryId,
     name: categoryId === 'uncategorized' ? t('other_uncategorized') : t('product_list')
   }
+
+  const [categoryName, setCategoryName] = useState(selectedCategory.name)
+
+  // Fetch the translated category name when the language switcher changes
+  useEffect(() => {
+    if (categoryId === 'uncategorized') {
+      setCategoryName(t('other_uncategorized'))
+      return
+    }
+
+    const fetchCategoryName = async () => {
+      try {
+        const login = user?.username || 'admin'
+        const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
+        const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
+          ? 'http://192.168.29.99:8019'
+          : '/api'
+
+        const url = `${API_BASE}/category_list`
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'login': login,
+            'api-key': apiKey,
+            'lang': i18n.language === 'gu' ? 'gu' : 'en'
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          let records = []
+          if (data && data.records && Array.isArray(data.records)) {
+            records = data.records
+          } else if (Array.isArray(data)) {
+            records = data
+          }
+
+          const matched = records.find(r => String(r.id) === String(categoryId))
+          if (matched) {
+            setCategoryName(matched.name || matched.display_name || categoryName)
+          }
+        }
+      } catch (err) {
+        console.error('Error updating category translation:', err)
+      }
+    }
+
+    fetchCategoryName()
+  }, [categoryId, i18n.language, user, t])
 
   const [products, setProducts] = useState([])
   const [isLoading, setIsLoading] = useState(false)
@@ -157,6 +207,7 @@ export default function ProductsPage({
         return {
           id: record.id,
           name: record.name,
+          display_name: record.display_name.replace(/\[[^\]]*\]/g, ''),
           price: record.list_price !== undefined ? record.list_price : 0,
           categoryId: categoryId,
           category: categoryName,
@@ -205,7 +256,7 @@ export default function ProductsPage({
         </button>
         <div>
           <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 margin-0">
-            {t('products_in_category', { category: selectedCategory?.name })}
+            {t('products_in_category', { category: categoryName })}
           </h2>
           <p className="text-zinc-500 dark:text-zinc-400 text-xs mt-1">
             {t('viewing_products')}
@@ -268,7 +319,7 @@ export default function ProductsPage({
                 {/* Product Details Section */}
                 <div className="flex-1 flex flex-col justify-between mt-3">
                   <h4 className="font-semibold text-xs text-zinc-900 dark:text-zinc-100 leading-snug line-clamp-2 min-h-[32px] overflow-hidden" title={product.name}>
-                    {product.name}
+                    {product.display_name}
                   </h4>
 
                   {/* Pricing and Action button row */}

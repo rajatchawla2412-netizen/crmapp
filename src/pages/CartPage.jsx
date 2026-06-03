@@ -20,14 +20,14 @@ function CartProductImage({ src, name }) {
     if (img.startsWith('data:') || img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/') || img.startsWith('blob:')) {
       return img;
     }
-    
+
     let cleanImg = img.trim().replace(/\s/g, '');
-    
+
     // Strip Python byte string wrapper b'...'
     if (cleanImg.startsWith("b'") && cleanImg.endsWith("'")) {
       cleanImg = cleanImg.slice(2, -1);
     }
-    
+
     // Check for double base64 encoding
     try {
       const decodedOnce = atob(cleanImg);
@@ -85,9 +85,10 @@ export default function CartPage({
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { addToast, editingOrder, saveEditedOrder } = useOutletContext()
-  
+
   const [isEditing, setIsEditing] = useState(false)
   const [showOrderConfirm, setShowOrderConfirm] = useState(false)
+  const [orderNumber, setOrderNumber] = useState('')
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
@@ -116,6 +117,15 @@ export default function CartPage({
         price_unit: Number(item.price)
       }))
 
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const hours = String(now.getHours()).padStart(2, '0')
+      const minutes = String(now.getMinutes()).padStart(2, '0')
+      const seconds = String(now.getSeconds()).padStart(2, '0')
+      const dateOrder = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
@@ -126,6 +136,7 @@ export default function CartPage({
         },
         body: JSON.stringify({
           partner_id: partnerId,
+          date_order: dateOrder,
           order_lines: orderLines
         })
       })
@@ -148,6 +159,7 @@ export default function CartPage({
 
       if (response.ok && responseData.status === 'success') {
         setShowOrderConfirm(true)
+        setOrderNumber(responseData.records[0].name)
       } else {
         throw new Error(responseData.message || t('order_error_default'))
       }
@@ -194,7 +206,7 @@ export default function CartPage({
   return (
     <div className="w-full transition-all duration-300">
       <div className="flex flex-col gap-6">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-zinc-200 dark:border-zinc-800">
           <div className="text-left">
@@ -255,8 +267,8 @@ export default function CartPage({
                 type="button"
                 onClick={() => setIsEditing(!isEditing)}
                 className={`px-4 py-2 border rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${isEditing
-                    ? 'border-purple-600 text-[#6941c6] bg-purple-50/50 dark:border-purple-500/30 dark:text-purple-400 dark:bg-purple-950/20'
-                    : 'border-zinc-200 dark:border-zinc-800 text-zinc-650 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                  ? 'border-purple-600 text-[#6941c6] bg-purple-50/50 dark:border-purple-500/30 dark:text-purple-400 dark:bg-purple-950/20'
+                  : 'border-zinc-200 dark:border-zinc-800 text-zinc-650 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900'
                   }`}
               >
                 {isEditing ? (
@@ -298,15 +310,12 @@ export default function CartPage({
                   key={item.id}
                   className="flex flex-col sm:flex-row sm:items-center justify-between py-4 gap-4 transition-all duration-300"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
                     <CartProductImage src={item.image} name={item.name} />
-                    <div className="text-left">
-                      <h4 className="font-semibold text-sm text-zinc-900 dark:text-zinc-50 leading-snug truncate max-w-[180px]" title={item.name}>
-                        {item.name}
+                    <div className="text-left flex-1 min-w-0">
+                      <h4 className="font-semibold text-sm text-zinc-900 dark:text-zinc-50 leading-snug truncate" title={item.display_name || item.name}>
+                        {item.display_name || item.name || ''}
                       </h4>
-                      <span className="text-[10px] text-zinc-400 font-mono">
-                        {item.category} (ID: {item.id})
-                      </span>
                     </div>
                   </div>
 
@@ -471,7 +480,7 @@ export default function CartPage({
               {t('order_success_title')}
             </h3>
             <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-6 leading-relaxed">
-              {t('order_success_subtext')}
+              {t('order_success_subtext', { orderNumber: orderNumber })}
             </p>
 
             <button

@@ -64,7 +64,7 @@ const resources = {
       place_order: "Place Order",
       placing_order: "Placing order...",
       order_success_title: "Order Placed Successfully!",
-      order_success_subtext: "Your order has been saved in the system. Processing will begin shortly.",
+      order_success_subtext: "Your order with the order no : {{orderNumber}} has been saved in the system. Processing will begin shortly.",
       ok_btn: "Okay",
       order_error_default: "Failed to place order. Please try again.",
       non_json_response: "Invalid response from server (Non-JSON).",

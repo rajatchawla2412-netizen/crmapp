@@ -17,19 +17,21 @@ function OrderProductImage({ src, name }) {
     return n.slice(0, 2).toUpperCase()
   }
 
+
+
   const formatImageSrc = (img) => {
     if (!img) return null;
     if (img.startsWith('data:') || img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/') || img.startsWith('blob:')) {
       return img;
     }
-    
+
     let cleanImg = img.trim().replace(/\s/g, '');
-    
+
     // Strip Python byte string wrapper b'...'
     if (cleanImg.startsWith("b'") && cleanImg.endsWith("'")) {
       cleanImg = cleanImg.slice(2, -1);
     }
-    
+
     // Check for double base64 encoding
     try {
       const decodedOnce = atob(cleanImg);
@@ -87,6 +89,26 @@ export default function OrdersPage({ user, onLogout }) {
   const [isCancelling, setIsCancelling] = useState(false)
   const [pendingEditOrder, setPendingEditOrder] = useState(null)
 
+  function formatDate(dateString) {
+    if (!dateString) return '';
+    const date = new Date(String(dateString).replace(' ', 'T'));
+    if (isNaN(date.getTime())) return dateString;
+
+    const datePart = date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }).replace(',', '');
+
+    const timePart = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+    return `${datePart}, ${timePart}`;
+  }
+
   const fetchOrders = useCallback(async () => {
     setIsLoading(true)
     setErrorMsg('')
@@ -124,6 +146,7 @@ export default function OrdersPage({ user, onLogout }) {
       } else if (Array.isArray(data)) {
         fetchedOrders = data
       }
+
 
       setOrders(fetchedOrders)
     } catch (err) {
@@ -249,9 +272,6 @@ export default function OrdersPage({ user, onLogout }) {
           <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 margin-0">
             {t('order_history')}
           </h2>
-          <p className="text-zinc-500 dark:text-zinc-400 text-xs mt-1">
-            {t('order_success_subtext')}
-          </p>
         </div>
       </div>
 
@@ -315,7 +335,7 @@ export default function OrdersPage({ user, onLogout }) {
                     </h4>
                   </div>
                   <p className="text-[10px] text-zinc-450 dark:text-zinc-500 font-medium">
-                    {t('order_date')}: <span className="font-mono text-zinc-800 dark:text-zinc-300">{order.date_order}</span>
+                    {t('order_date')}: <span className="font-mono text-zinc-800 dark:text-zinc-300">{formatDate(order.date_order)}</span>
                   </p>
                 </div>
 
@@ -343,7 +363,7 @@ export default function OrdersPage({ user, onLogout }) {
                           <OrderProductImage src={line.image} name={line.product_name} />
                           <div className="text-left">
                             <h5 className="font-semibold text-xs text-zinc-900 dark:text-white leading-snug line-clamp-1">
-                              {line.product_name}
+                              {(line.display_name || line.product_name || '').replace(/\[[^\]]*\]/g, '')}
                             </h5>
                             <p className="text-[10px] text-zinc-450 dark:text-zinc-500 mt-0.5">
                               {line.qty} {line.uom || 'Units'} &times; ₹{Number(line.price_unit).toFixed(2)}

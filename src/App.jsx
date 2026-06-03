@@ -86,15 +86,19 @@ function App() {
 
   const startEditingOrder = (order) => {
     setEditingOrder(order)
-    const mappedCart = (order.order_lines || []).map(line => ({
-      id: line.product_id,
-      lineId: line.id,
-      name: line.product_name,
-      price: line.price_unit,
-      quantity: line.qty,
-      category: line.uom || 'Units',
-      image: line.image
-    }))
+    const mappedCart = (order.order_lines || []).map(line => {
+      const displayName = (line.display_name || line.product_name || '').replace(/\[[^\]]*\]/g, '');
+      return {
+        id: line.product_id,
+        lineId: line.id,
+        name: line.product_name,
+        display_name: displayName,
+        price: line.price_unit,
+        quantity: line.qty,
+        category: line.uom || 'Units',
+        image: line.image
+      }
+    })
     setCart(mappedCart)
   }
 
@@ -194,6 +198,7 @@ function App() {
       return [...prev, {
         id: product.id,
         name: product.name,
+        display_name: product.display_name,
         price: product.price,
         quantity: quantity,
         categoryId: product.categoryId,
@@ -221,19 +226,19 @@ function App() {
     <HashRouter>
       <Routes>
         {/* Unauthenticated Route */}
-        <Route 
-          path="/login" 
-          element={!isLoggedIn ? <LoginPage onLoginSuccess={handleLoginSuccess} /> : <Navigate to="/" replace />} 
+        <Route
+          path="/login"
+          element={!isLoggedIn ? <LoginPage onLoginSuccess={handleLoginSuccess} /> : <Navigate to="/" replace />}
         />
 
         {/* Authenticated Routes with Shared Layout */}
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={isLoggedIn ? (
-            <LandingPage 
-              user={user} 
-              onLogout={handleLogout} 
-              cart={cart} 
+            <LandingPage
+              user={user}
+              onLogout={handleLogout}
+              cart={cart}
               editingOrder={editingOrder}
               startEditingOrder={startEditingOrder}
               discardEditingOrder={discardEditingOrder}
@@ -243,35 +248,35 @@ function App() {
           ) : <Navigate to="/login" replace />}
         >
           <Route index element={<CategoriesPage user={user} onLogout={handleLogout} />} />
-          <Route 
-            path="products/:categoryId" 
+          <Route
+            path="products/:categoryId"
             element={
-              <ProductsPage 
-                user={user} 
-                onLogout={handleLogout} 
-                cart={cart} 
-                onAddToCart={handleAddToCart} 
-                onUpdateQuantity={handleUpdateQuantity} 
-                onRemoveItem={handleRemoveItem} 
+              <ProductsPage
+                user={user}
+                onLogout={handleLogout}
+                cart={cart}
+                onAddToCart={handleAddToCart}
+                onUpdateQuantity={handleUpdateQuantity}
+                onRemoveItem={handleRemoveItem}
               />
-            } 
+            }
           />
-          <Route 
-            path="cart" 
+          <Route
+            path="cart"
             element={
-              <CartPage 
-                cart={cart} 
-                onUpdateQuantity={handleUpdateQuantity} 
-                onRemoveItem={handleRemoveItem} 
-                onEmptyCart={handleEmptyCart} 
-                user={user} 
-                onLogout={handleLogout} 
+              <CartPage
+                cart={cart}
+                onUpdateQuantity={handleUpdateQuantity}
+                onRemoveItem={handleRemoveItem}
+                onEmptyCart={handleEmptyCart}
+                user={user}
+                onLogout={handleLogout}
               />
-            } 
+            }
           />
-          <Route 
-            path="orders" 
-            element={<OrdersPage user={user} onLogout={handleLogout} />} 
+          <Route
+            path="orders"
+            element={<OrdersPage user={user} onLogout={handleLogout} />}
           />
         </Route>
 
