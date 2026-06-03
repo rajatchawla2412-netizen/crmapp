@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import i18n from './i18n'
 import LoginPage from './pages/LoginPage'
@@ -9,6 +9,74 @@ import ProductsPage from './pages/ProductsPage'
 import CartPage from './pages/CartPage'
 import OrdersPage from './pages/OrdersPage'
 import './App.css'
+
+function AndroidBackButtonHandler() {
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let appListener;
+    const CapApp = Capacitor.Plugins?.App;
+
+    const setupListener = async () => {
+      if (CapApp && typeof CapApp.addListener === 'function') {
+        try {
+          appListener = await CapApp.addListener('backButton', () => {
+            const currentPath = location.pathname
+            if (currentPath === '/' || currentPath === '/login') {
+              CapApp.exitApp()
+            } else {
+              navigate(-1)
+            }
+          });
+          return;
+        } catch (e) {
+          console.warn('CapApp.addListener failed, falling back to document event listener:', e);
+        }
+      }
+
+      // Fallback: standard Cordova/Capacitor document listener
+      const handleBackButton = (e) => {
+        e.preventDefault();
+        const currentPath = location.pathname
+        if (currentPath === '/' || currentPath === '/login') {
+          if (CapApp && typeof CapApp.exitApp === 'function') {
+            CapApp.exitApp()
+          } else if (window.navigator?.app?.exitApp) {
+            window.navigator.app.exitApp()
+          }
+        } else {
+          navigate(-1)
+        }
+      };
+
+      document.addEventListener('backbutton', handleBackButton);
+      return () => {
+        document.removeEventListener('backbutton', handleBackButton);
+      };
+    };
+
+    let cleanupFn;
+    setupListener().then(cleanup => {
+      if (cleanup) {
+        cleanupFn = cleanup;
+      }
+    });
+
+    return () => {
+      if (appListener && typeof appListener.remove === 'function') {
+        appListener.remove();
+      }
+      if (cleanupFn) {
+        cleanupFn();
+      }
+    };
+  }, [location.pathname, navigate]);
+
+  return null;
+}
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -224,6 +292,7 @@ function App() {
 
   return (
     <HashRouter>
+      <AndroidBackButtonHandler />
       <Routes>
         {/* Unauthenticated Route */}
         <Route
