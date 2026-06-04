@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
-export default function Navbar({ user, onLogout, cart }) {
+export default function Navbar({ user, onLogout, cart, isContentLoading }) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
@@ -52,8 +52,9 @@ export default function Navbar({ user, onLogout, cart }) {
         {/* Language Switcher button */}
         <button
           type="button"
+          disabled={isContentLoading}
           onClick={() => i18n.changeLanguage(i18n.language === 'en' ? 'gu' : 'en')}
-          className="px-3.5 py-1.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-850 rounded-xl text-xs font-semibold text-zinc-650 dark:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800 transition-all flex items-center gap-1.5 cursor-pointer"
+          className="px-3.5 py-1.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-850 rounded-xl text-xs font-semibold text-zinc-650 dark:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           title={t('preferred_language')}
         >
           <svg className="w-4 h-4 text-zinc-450 dark:text-zinc-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

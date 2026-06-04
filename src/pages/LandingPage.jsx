@@ -52,6 +52,15 @@ export default function LandingPage({
     navigate('/orders')
   }
 
+  const [loadingMap, setLoadingMap] = useState({})
+  const setPageLoading = useCallback((key, isLoading) => {
+    setLoadingMap(prev => {
+      if (prev[key] === isLoading) return prev
+      return { ...prev, [key]: isLoading }
+    })
+  }, [])
+  const isContentLoading = Object.values(loadingMap).some(Boolean)
+
   const mainContent = (
     <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-10 md:py-12 flex flex-col gap-8">
       <Outlet context={{
@@ -59,7 +68,8 @@ export default function LandingPage({
         editingOrder,
         startEditingOrder,
         discardEditingOrder,
-        saveEditedOrder: onSaveEditedOrder
+        saveEditedOrder: onSaveEditedOrder,
+        setPageLoading
       }} />
     </main>
   )
@@ -99,7 +109,7 @@ export default function LandingPage({
             </div>
           </div>
         )}
-        <Navbar user={user} onLogout={onLogout} cart={cart} />
+        <Navbar user={user} onLogout={onLogout} cart={cart} isContentLoading={isContentLoading} />
       </div>
 
       {mainContent}

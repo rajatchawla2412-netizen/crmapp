@@ -81,10 +81,21 @@ function OrderProductImage({ src, name }) {
 export default function OrdersPage({ user, onLogout }) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const { addToast, editingOrder, startEditingOrder, discardEditingOrder } = useOutletContext()
+  const { addToast, editingOrder, startEditingOrder, discardEditingOrder, setPageLoading } = useOutletContext()
   const [orders, setOrders] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+
+  useEffect(() => {
+    if (setPageLoading) {
+      setPageLoading('orders', isLoading)
+    }
+    return () => {
+      if (setPageLoading) {
+        setPageLoading('orders', false)
+      }
+    }
+  }, [isLoading, setPageLoading])
   const [confirmCancelOrderId, setConfirmCancelOrderId] = useState(null)
   const [isCancelling, setIsCancelling] = useState(false)
   const [pendingEditOrder, setPendingEditOrder] = useState(null)

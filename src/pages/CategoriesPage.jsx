@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import PullToRefresh from 'react-simple-pull-to-refresh'
@@ -78,9 +78,21 @@ function CategoryImage({ src, name }) {
 export default function CategoriesPage({ user, onLogout }) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const { setPageLoading } = useOutletContext() || {}
   const [categories, setCategories] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+
+  useEffect(() => {
+    if (setPageLoading) {
+      setPageLoading('categories', isLoading)
+    }
+    return () => {
+      if (setPageLoading) {
+        setPageLoading('categories', false)
+      }
+    }
+  }, [isLoading, setPageLoading])
 
   const loadData = useCallback(async () => {
     setIsLoading(true)

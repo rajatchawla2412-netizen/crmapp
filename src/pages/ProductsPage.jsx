@@ -87,7 +87,7 @@ export default function ProductsPage({
   const { categoryId } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { addToast } = useOutletContext()
+  const { addToast, setPageLoading } = useOutletContext()
 
   // Retrieve category info from state or reconstruct a simple fallback
 
@@ -148,6 +148,17 @@ export default function ProductsPage({
   const [products, setProducts] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+
+  useEffect(() => {
+    if (setPageLoading) {
+      setPageLoading('products', isLoading)
+    }
+    return () => {
+      if (setPageLoading) {
+        setPageLoading('products', false)
+      }
+    }
+  }, [isLoading, setPageLoading])
 
   const fetchProducts = useCallback(async () => {
     if (!selectedCategory) return
