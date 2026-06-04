@@ -3,6 +3,12 @@ import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 
+const isShippingProduct = (item) => {
+  if (!item) return false;
+  const name = String(item.name || item.display_name || '').toLowerCase();
+  return name.includes('shipping') || name.includes('શિપિંગ') || name.includes('delivery') || name.includes('ડેલિવરી');
+}
+
 // CartProductImage sub-component to handle images with fallback initials gracefully
 function CartProductImage({ src, name }) {
   const [hasError, setHasError] = useState(false)
@@ -96,6 +102,13 @@ export default function CartPage({
   // Calculations
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
   const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  const totalTax = cart.reduce((sum, item) => {
+    const percentage = item.taxes && item.taxes.length > 0
+      ? item.taxes.reduce((s, t) => s + (t.amount || 0), 0)
+      : 0;
+    return sum + ((item.price * item.quantity * percentage) / 100);
+  }, 0)
+  const totalWithTax = totalPrice + totalTax;
 
   const handlePlaceOrder = async () => {
     if (isPlacingOrder) return
@@ -316,6 +329,15 @@ export default function CartPage({
                       <h4 className="font-semibold text-sm text-zinc-900 dark:text-zinc-50 leading-snug truncate" title={item.display_name || item.name}>
                         {item.display_name || item.name || ''}
                       </h4>
+                      {/* Tax Information */}
+                      <div className="flex gap-3 mt-1 text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">
+                        <span>
+                          {t('tax_label', { defaultValue: 'Tax' })}: {item.taxes && item.taxes.length > 0 ? item.taxes.map(t => t.name).join(', ') : '0%'}
+                        </span>
+                        <span>
+                          {t('taxable_label', { defaultValue: 'Taxable' })}: ₹ {(item.price * item.quantity).toFixed(2)}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -329,41 +351,54 @@ export default function CartPage({
                     </div>
 
                     {isEditing ? (
-                      /* Quantity controls in edit mode */
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center bg-zinc-50 dark:bg-zinc-900 border border-zinc-250 dark:border-zinc-800 p-1.5 rounded-xl">
-                          <button
-                            type="button"
-                            onClick={() => onUpdateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                            className="w-6 h-6 rounded-lg bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-xs hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer"
-                          >
-                            -
-                          </button>
-                          <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-50 px-2 min-w-[20px] text-center">
-                            {item.quantity}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                            className="w-6 h-6 rounded-lg bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-xs hover:bg-zinc-50 dark:hover:bg-zinc-900 cursor-pointer"
-                          >
-                            +
-                          </button>
-                        </div>
+                      <div className="flex items-center gap-4">
+                        {editingOrder && isShippingProduct(item) ? (
+                          <div className="px-3 py-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl">
+                            {t('qty_label', { defaultValue: 'Qty' })}: {item.quantity}
+                          </div>
+                        ) : (
+                          <div className="flex items-center border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden">
+                            <button
+                              type="button"
+                              onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                              className="px-3 py-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
+                            >
+                              -
+                            </button>
+                            <span className="px-2 text-xs font-semibold text-zinc-900 dark:text-zinc-50 min-w-[24px] text-center">
+                              {item.quantity}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
+                              className="px-3 py-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
+                            >
+                              +
+                            </button>
+                          </div>
+                        )}
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onRemoveItem(item.id)
-                            addToast(t('item_removed_toast'), 'success')
-                          }}
-                          className="p-2 border border-rose-100 dark:border-rose-900/30 bg-rose-50/50 dark:bg-rose-955/20 text-rose-605 dark:text-rose-400 hover:bg-rose-100 rounded-xl transition-all cursor-pointer flex items-center justify-center"
-                          title="Remove item"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
+                        {editingOrder && isShippingProduct(item) ? (
+                          <span className="p-2 border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-zinc-400 rounded-xl cursor-not-allowed flex items-center justify-center opacity-50 shadow-sm" title="Shipping charges cannot be removed">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onRemoveItem(item.id)
+                              addToast(t('item_removed_toast'), 'success')
+                            }}
+                            className="p-2 border border-rose-100 dark:border-rose-900/30 bg-rose-50/50 dark:bg-rose-955/20 text-rose-600 dark:text-rose-400 hover:bg-rose-100 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+                            title="Remove item"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     ) : (
                       /* Display quantity & total in read-only mode */
@@ -403,10 +438,18 @@ export default function CartPage({
                 <span>{t('total_items')}</span>
                 <span className="font-semibold text-zinc-900 dark:text-zinc-50">{totalItems}</span>
               </div>
+              <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400 text-xs pt-1">
+                <span>{t('total_taxable_amount', { defaultValue: 'Total Taxable Amount' })}</span>
+                <span className="font-semibold text-zinc-900 dark:text-zinc-50">₹ {totalPrice.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400 text-xs pt-1">
+                <span>{t('total_tax_amount', { defaultValue: 'Total Tax Amount' })}</span>
+                <span className="font-semibold text-zinc-900 dark:text-zinc-50">₹ {totalTax.toFixed(2)}</span>
+              </div>
               <div className="flex items-center justify-between text-sm pt-3 border-t border-zinc-200 dark:border-zinc-800">
-                <span className="font-semibold text-zinc-900 dark:text-zinc-50">{t('total_price')}</span>
+                <span className="font-semibold text-zinc-900 dark:text-zinc-50">{t('total_price_incl_tax', { defaultValue: 'Total Price (Incl. Tax)' })}</span>
                 <span className="font-extrabold text-[#6941c6] dark:text-purple-400 text-base">
-                  ₹ {totalPrice.toFixed(2)}
+                  ₹ {totalWithTax.toFixed(2)}
                 </span>
               </div>
 

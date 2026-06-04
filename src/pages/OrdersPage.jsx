@@ -409,10 +409,26 @@ export default function OrdersPage({ user, onLogout }) {
               )}
 
               {/* Order Footer Total & Actions */}
-              <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 flex flex-col gap-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-zinc-500 dark:text-zinc-450">
-                    {t('total_price')}
+              <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 flex flex-col gap-2.5">
+                {order.amount_untaxed !== undefined && (
+                  <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <span>{t('taxable_amount', { defaultValue: 'Taxable Amount' })}</span>
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-50">
+                      ₹{Number(order.amount_untaxed).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                {order.amount_tax !== undefined && (
+                  <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <span>{t('tax_amount', { defaultValue: 'Tax' })}</span>
+                    <span className="font-semibold text-zinc-900 dark:text-zinc-50">
+                      ₹{Number(order.amount_tax).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between text-xs pt-2 border-t border-zinc-100 dark:border-zinc-900">
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-50">
+                    {t('total_price_incl_tax', { defaultValue: 'Total (Incl. Tax)' })}
                   </span>
                   <span className="font-extrabold text-[#6941c6] dark:text-purple-400 text-sm">
                     ₹{Number(order.amount_total).toFixed(2)}

@@ -100,7 +100,8 @@ function App() {
         price: line.price_unit,
         quantity: line.qty,
         category: line.uom || 'Units',
-        image: line.image
+        image: line.image,
+        taxes: line.taxes || []
       }
     })
     setCart(mappedCart)
@@ -207,7 +208,8 @@ function App() {
         quantity: quantity,
         categoryId: product.categoryId,
         category: product.category,
-        image: product.image
+        image: product.image,
+        taxes: product.taxes || []
       }]
     })
   }
@@ -218,12 +220,27 @@ function App() {
     ))
   }
 
+  const isShippingProduct = (item) => {
+    if (!item) return false;
+    const name = String(item.name || item.display_name || '').toLowerCase();
+    return name.includes('shipping') || name.includes('શિપિંગ') || name.includes('delivery') || name.includes('ડેલિવરી');
+  }
+
   const handleRemoveItem = (productId) => {
-    setCart(prev => prev.filter(item => item.id !== productId))
+    setCart(prev => prev.filter(item => {
+      if (editingOrder && item.id === productId && isShippingProduct(item)) {
+        return true; // Keep shipping charges when editing order
+      }
+      return item.id !== productId;
+    }))
   }
 
   const handleEmptyCart = () => {
-    setCart([])
+    if (editingOrder) {
+      setCart(prev => prev.filter(item => isShippingProduct(item)))
+    } else {
+      setCart([])
+    }
   }
 
   return (

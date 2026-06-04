@@ -4,6 +4,12 @@ import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import PullToRefresh from 'react-simple-pull-to-refresh'
 
+const isShippingProduct = (item) => {
+  if (!item) return false;
+  const name = String(item.name || item.display_name || '').toLowerCase();
+  return name.includes('shipping') || name.includes('શિપિંગ') || name.includes('delivery') || name.includes('ડેલિવરી');
+}
+
 // Minimalist Pull to Refresh components
 const PullingIndicator = () => (
   <div className="flex items-center justify-center py-4 text-zinc-400 dark:text-zinc-500">
@@ -102,7 +108,7 @@ export default function ProductsPage({
   const { categoryId } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { addToast, setPageLoading } = useOutletContext()
+  const { addToast, setPageLoading, editingOrder } = useOutletContext()
 
   // Retrieve category info from state or reconstruct a simple fallback
 
@@ -237,7 +243,8 @@ export default function ProductsPage({
           price: record.list_price !== undefined ? record.list_price : 0,
           categoryId: categoryId,
           category: categoryName,
-          image: record.image
+          image: record.image,
+          taxes: record.taxes || []
         }
       })
 
@@ -348,6 +355,16 @@ export default function ProductsPage({
                     {product.display_name}
                   </h4>
 
+                  {/* Tax Information */}
+                  <div className="flex flex-col gap-0.5 mt-1 text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">
+                    <span>
+                      {t('tax_label', { defaultValue: 'Tax' })}: {product.taxes && product.taxes.length > 0 ? product.taxes.map(t => t.name).join(', ') : '0%'}
+                    </span>
+                    <span>
+                      {t('taxable_label', { defaultValue: 'Taxable' })}: ₹{(product.price * (cartQuantity || 1)).toFixed(2)}
+                    </span>
+                  </div>
+
                   {/* Pricing and Action button row */}
                   <div className="flex items-center justify-between mt-4">
                     {/* Price display */}
@@ -361,31 +378,38 @@ export default function ProductsPage({
                     {/* Quantity selectors or Add Button */}
                     <div className="flex-shrink-0">
                       {cartQuantity > 0 ? (
-                        <div className="flex items-center bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 p-0.5 rounded-lg">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (cartQuantity === 1) {
-                                onRemoveItem(product.id)
-                              } else {
-                                onUpdateQuantity(product.id, cartQuantity - 1)
-                              }
-                            }}
-                            className="w-5.5 h-5.5 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
-                          >
-                            -
-                          </button>
-                          <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-50 px-1 min-w-[12px] text-center">
-                            {cartQuantity}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => onUpdateQuantity(product.id, cartQuantity + 1)}
-                            className="w-5.5 h-5.5 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
-                          >
-                            +
-                          </button>
-                        </div>
+                        editingOrder && isShippingProduct(product) ? (
+                          <div className="px-2.5 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                            {t('qty_label', { defaultValue: 'Qty' })}: {cartQuantity}
+                          </div>
+                        ) : (
+                          <div className="flex items-center bg-white dark:bg-zinc-955 border border-zinc-200 dark:border-zinc-800 p-0.5 rounded-lg">
+                            <button
+                              type="button"
+                              disabled={editingOrder && isShippingProduct(product) && cartQuantity === 1}
+                              onClick={() => {
+                                if (cartQuantity === 1) {
+                                  onRemoveItem(product.id)
+                                } else {
+                                  onUpdateQuantity(product.id, cartQuantity - 1)
+                                }
+                              }}
+                              className="w-5.5 h-5.5 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              -
+                            </button>
+                            <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-50 px-1 min-w-[12px] text-center">
+                              {cartQuantity}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => onUpdateQuantity(product.id, cartQuantity + 1)}
+                              className="w-5.5 h-5.5 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                            >
+                              +
+                            </button>
+                          </div>
+                        )
                       ) : (
                         <button
                           type="button"
