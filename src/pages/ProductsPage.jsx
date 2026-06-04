@@ -383,7 +383,7 @@ export default function ProductsPage({
                             {t('qty_label', { defaultValue: 'Qty' })}: {cartQuantity}
                           </div>
                         ) : (
-                          <div className="flex items-center bg-white dark:bg-zinc-955 border border-zinc-200 dark:border-zinc-800 p-0.5 rounded-lg">
+                          <div className="flex items-center bg-white dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-800 p-0.5 rounded-lg">
                             <button
                               type="button"
                               disabled={editingOrder && isShippingProduct(product) && cartQuantity === 1}
