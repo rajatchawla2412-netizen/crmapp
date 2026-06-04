@@ -53,7 +53,11 @@ export default function Navbar({ user, onLogout, cart, isContentLoading }) {
         <button
           type="button"
           disabled={isContentLoading}
-          onClick={() => i18n.changeLanguage(i18n.language === 'en' ? 'gu' : 'en')}
+          onClick={() => {
+            const nextLang = i18n.language === 'en' ? 'gu' : 'en';
+            i18n.changeLanguage(nextLang);
+            localStorage.setItem('language', nextLang);
+          }}
           className="px-3.5 py-1.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-850 rounded-xl text-xs font-semibold text-zinc-650 dark:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           title={t('preferred_language')}
         >

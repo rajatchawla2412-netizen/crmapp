@@ -398,7 +398,12 @@ export default function ProductsPage({
   )
 
   return Capacitor.isNativePlatform() ? (
-    <PullToRefresh onRefresh={handleRefresh}>
+    <PullToRefresh
+      onRefresh={handleRefresh}
+      resistance={2.5}
+      pullDownThreshold={95}
+      maxPullDownDistance={140}
+    >
       {productsContent}
     </PullToRefresh>
   ) : (

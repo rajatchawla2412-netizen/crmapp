@@ -281,7 +281,12 @@ export default function CategoriesPage({ user, onLogout }) {
   )
 
   return Capacitor.isNativePlatform() ? (
-    <PullToRefresh onRefresh={handleRefresh}>
+    <PullToRefresh
+      onRefresh={handleRefresh}
+      resistance={2.5}
+      pullDownThreshold={95}
+      maxPullDownDistance={140}
+    >
       {categoriesContent}
     </PullToRefresh>
   ) : (

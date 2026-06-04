@@ -108,7 +108,11 @@ export default function LoginPage({ onLoginSuccess }) {
       {/* Corner Language Toggle Button */}
       <button
         type="button"
-        onClick={() => i18n.changeLanguage(i18n.language === 'en' ? 'gu' : 'en')}
+        onClick={() => {
+          const nextLang = i18n.language === 'en' ? 'gu' : 'en';
+          i18n.changeLanguage(nextLang);
+          localStorage.setItem('language', nextLang);
+        }}
         className="absolute top-6 right-6 px-3.5 py-1.5 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-full text-sm font-semibold text-zinc-650 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all shadow-sm flex items-center gap-1.5 cursor-pointer z-20"
       >
         <svg className="w-4 h-4 text-zinc-450 dark:text-zinc-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

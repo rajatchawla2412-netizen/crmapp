@@ -1,1 +1,5 @@
 @import "tailwindcss";
+
+.ptr__pull-down--pull-more {
+  text-align: center;
+}

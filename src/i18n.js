@@ -191,11 +191,15 @@ const resources = {
   }
 };
 
+const savedLanguage = typeof window !== 'undefined' && window.localStorage
+  ? localStorage.getItem('language') || 'en'
+  : 'en';
+
 i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'en',
+    lng: savedLanguage,
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false

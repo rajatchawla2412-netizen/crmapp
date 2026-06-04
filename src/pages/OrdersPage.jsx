@@ -434,7 +434,12 @@ export default function OrdersPage({ user, onLogout }) {
   return (
     <>
       {Capacitor.isNativePlatform() ? (
-        <PullToRefresh onRefresh={handleRefresh}>
+        <PullToRefresh
+          onRefresh={handleRefresh}
+          resistance={2.5}
+          pullDownThreshold={95}
+          maxPullDownDistance={140}
+        >
           {ordersContent}
         </PullToRefresh>
       ) : (
