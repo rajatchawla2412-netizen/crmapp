@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import i18n from './i18n'
@@ -14,23 +14,36 @@ function AndroidBackButtonHandler() {
   const navigate = useNavigate()
   const location = useLocation()
 
+  const locationRef = useRef(location)
+  useEffect(() => {
+    locationRef.current = location
+  }, [location])
+
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    let appListener;
     const CapApp = Capacitor.Plugins?.App;
+    let appListener = null;
+    let documentListener = null;
+    let isDestroyed = false;
 
     const setupListener = async () => {
       if (CapApp && typeof CapApp.addListener === 'function') {
         try {
-          appListener = await CapApp.addListener('backButton', () => {
-            const currentPath = location.pathname
+          const listener = await CapApp.addListener('backButton', () => {
+            const currentPath = locationRef.current.pathname
             if (currentPath === '/' || currentPath === '/login') {
               CapApp.exitApp()
             } else {
               navigate(-1)
             }
           });
+
+          if (isDestroyed) {
+            listener.remove();
+          } else {
+            appListener = listener;
+          }
           return;
         } catch (e) {
           console.warn('CapApp.addListener failed, falling back to document event listener:', e);
@@ -38,9 +51,9 @@ function AndroidBackButtonHandler() {
       }
 
       // Fallback: standard Cordova/Capacitor document listener
-      const handleBackButton = (e) => {
+      documentListener = (e) => {
         e.preventDefault();
-        const currentPath = location.pathname
+        const currentPath = locationRef.current.pathname
         if (currentPath === '/' || currentPath === '/login') {
           if (CapApp && typeof CapApp.exitApp === 'function') {
             CapApp.exitApp()
@@ -52,28 +65,23 @@ function AndroidBackButtonHandler() {
         }
       };
 
-      document.addEventListener('backbutton', handleBackButton);
-      return () => {
-        document.removeEventListener('backbutton', handleBackButton);
-      };
+      if (!isDestroyed) {
+        document.addEventListener('backbutton', documentListener);
+      }
     };
 
-    let cleanupFn;
-    setupListener().then(cleanup => {
-      if (cleanup) {
-        cleanupFn = cleanup;
-      }
-    });
+    setupListener();
 
     return () => {
+      isDestroyed = true;
       if (appListener && typeof appListener.remove === 'function') {
         appListener.remove();
       }
-      if (cleanupFn) {
-        cleanupFn();
+      if (documentListener) {
+        document.removeEventListener('backbutton', documentListener);
       }
     };
-  }, [location.pathname, navigate]);
+  }, [navigate]);
 
   return null;
 }

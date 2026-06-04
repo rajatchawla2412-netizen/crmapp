@@ -4,6 +4,21 @@ import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import PullToRefresh from 'react-simple-pull-to-refresh'
 
+// Minimalist Pull to Refresh components
+const PullingIndicator = () => (
+  <div className="flex items-center justify-center py-4 text-zinc-400 dark:text-zinc-500">
+    <svg className="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+    </svg>
+  </div>
+)
+
+const RefreshingIndicator = () => (
+  <div className="flex items-center justify-center py-4">
+    <div className="w-6 h-6 border-2 border-zinc-300 dark:border-zinc-700 border-t-purple-650 dark:border-t-purple-400 rounded-full animate-spin"></div>
+  </div>
+)
+
 // Small sub-component for product line images with fallback initials
 function OrderProductImage({ src, name }) {
   const [hasError, setHasError] = useState(false)
@@ -439,6 +454,8 @@ export default function OrdersPage({ user, onLogout }) {
           resistance={2.5}
           pullDownThreshold={95}
           maxPullDownDistance={140}
+          pullingContent={<PullingIndicator />}
+          refreshingContent={<RefreshingIndicator />}
         >
           {ordersContent}
         </PullToRefresh>
