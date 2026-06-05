@@ -118,7 +118,7 @@ export default function CategoriesPage({ user, onLogout }) {
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
 
       const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-        ? 'http://192.168.29.99:8019'
+        ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
         : '/api'
 
       const categoriesUrl = `${API_BASE}/category_list`

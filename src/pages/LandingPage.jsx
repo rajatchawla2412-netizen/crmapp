@@ -13,11 +13,12 @@ export default function LandingPage({
   onSaveEditedOrder,
   onDiscardEditedOrder
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const [toasts, setToasts] = useState([])
   const [isSaving, setIsSaving] = useState(false)
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
+  const [isLanguageUpdating, setIsLanguageUpdating] = useState(false)
 
   const addToast = useCallback((message, type = 'success') => {
     const id = Date.now() + Math.random().toString(36).substring(2, 9)
@@ -69,7 +70,8 @@ export default function LandingPage({
         startEditingOrder,
         discardEditingOrder,
         saveEditedOrder: onSaveEditedOrder,
-        setPageLoading
+        setPageLoading,
+        isLanguageUpdating
       }} />
     </main>
   )
@@ -109,7 +111,14 @@ export default function LandingPage({
             </div>
           </div>
         )}
-        <Navbar user={user} onLogout={onLogout} cart={cart} isContentLoading={isContentLoading} />
+        <Navbar 
+          user={user} 
+          onLogout={onLogout} 
+          cart={cart} 
+          isContentLoading={isContentLoading} 
+          isLanguageUpdating={isLanguageUpdating}
+          setIsLanguageUpdating={setIsLanguageUpdating}
+        />
       </div>
 
       {mainContent}

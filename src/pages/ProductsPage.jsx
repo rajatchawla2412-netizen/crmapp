@@ -108,7 +108,7 @@ export default function ProductsPage({
   const { categoryId } = useParams()
   const navigate = useNavigate()
   const location = useLocation()
-  const { addToast, setPageLoading, editingOrder } = useOutletContext()
+  const { addToast, setPageLoading, editingOrder, isLanguageUpdating } = useOutletContext()
 
   // Retrieve category info from state or reconstruct a simple fallback
 
@@ -121,6 +121,8 @@ export default function ProductsPage({
 
   // Fetch the translated category name when the language switcher changes
   useEffect(() => {
+    if (isLanguageUpdating) return
+
     if (categoryId === 'uncategorized') {
       setCategoryName(t('other_uncategorized'))
       return
@@ -131,7 +133,7 @@ export default function ProductsPage({
         const login = user?.username || 'admin'
         const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
         const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-          ? 'http://192.168.29.99:8019'
+          ? 'http://192.168.29.1:8089'
           : '/api'
 
         const url = `${API_BASE}/category_list`
@@ -164,7 +166,7 @@ export default function ProductsPage({
     }
 
     fetchCategoryName()
-  }, [categoryId, i18n.language, user, t])
+  }, [categoryId, i18n.language, user, t, isLanguageUpdating])
 
   const [products, setProducts] = useState([])
   const [isLoading, setIsLoading] = useState(false)
@@ -182,6 +184,7 @@ export default function ProductsPage({
   }, [isLoading, setPageLoading])
 
   const fetchProducts = useCallback(async () => {
+    if (isLanguageUpdating) return
     if (!selectedCategory) return
     setIsLoading(true)
     setErrorMsg('')
@@ -192,7 +195,7 @@ export default function ProductsPage({
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
 
       const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-        ? 'http://192.168.29.99:8019'
+        ? 'http://192.168.29.1:8089'
         : '/api'
 
       const categId = selectedCategory.id === 'uncategorized' ? 'false' : selectedCategory.id
@@ -263,7 +266,7 @@ export default function ProductsPage({
     } finally {
       setIsLoading(false)
     }
-  }, [selectedCategory, user, onLogout, t, i18n.language])
+  }, [selectedCategory, user, onLogout, t, i18n.language, isLanguageUpdating])
 
   useEffect(() => {
     fetchProducts()
@@ -355,15 +358,7 @@ export default function ProductsPage({
                     {product.display_name}
                   </h4>
 
-                  {/* Tax Information */}
-                  <div className="flex flex-col gap-0.5 mt-1 text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">
-                    <span>
-                      {t('tax_label', { defaultValue: 'Tax' })}: {product.taxes && product.taxes.length > 0 ? product.taxes.map(t => t.name).join(', ') : '0%'}
-                    </span>
-                    <span>
-                      {t('taxable_label', { defaultValue: 'Taxable' })}: ₹{(product.price * (cartQuantity || 1)).toFixed(2)}
-                    </span>
-                  </div>
+
 
                   {/* Pricing and Action button row */}
                   <div className="flex items-center justify-between mt-4">

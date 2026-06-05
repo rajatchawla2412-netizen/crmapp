@@ -119,7 +119,7 @@ function App() {
     const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
     const partnerId = Number(user?.partner_id || editingOrder.partner_id || editingOrder.customer_id || 9)
     const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-      ? 'http://192.168.29.99:8019'
+      ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
       : '/api'
 
     const url = `${API_BASE}/edit_order`

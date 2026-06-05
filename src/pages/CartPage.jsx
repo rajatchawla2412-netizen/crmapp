@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
+import { calculateDrivingDistance } from '../utils/distanceService'
 
 const isShippingProduct = (item) => {
   if (!item) return false;
@@ -94,6 +95,7 @@ export default function CartPage({
 
   const [isEditing, setIsEditing] = useState(false)
   const [showOrderConfirm, setShowOrderConfirm] = useState(false)
+  const [showClearCartConfirm, setShowClearCartConfirm] = useState(false)
   const [orderNumber, setOrderNumber] = useState('')
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
   const [isSavingEdit, setIsSavingEdit] = useState(false)
@@ -120,9 +122,62 @@ export default function CartPage({
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
       const partnerId = Number(user?.partner_id || 9)
 
-      const API_URL = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-        ? 'http://192.168.29.99:8019/create_order'
-        : '/api/create_order'
+      const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
+        ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
+        : '/api'
+
+      const API_URL = `${API_BASE}/create_order`
+
+      // Fetch coordinates and calculate distance
+      let distanceKm = 0
+      try {
+        const lang = i18n.language === 'gu' ? 'gu' : 'en'
+        const addressUrl = `${API_BASE}/address_details?partner_id=${partnerId}`
+        const addressResponse = await fetch(addressUrl, {
+          method: 'GET',
+          headers: {
+            'login': login,
+            'api-key': apiKey,
+            'lang': lang
+          }
+        })
+
+        if (addressResponse.status === 401 || addressResponse.status === 403) {
+          onLogout()
+          return
+        }
+
+        if (addressResponse.ok) {
+          const addressData = await addressResponse.json()
+          if (addressData.status === 'success' && addressData.records) {
+            const customerAddr = addressData.records.customer_address
+            const companyAddr = addressData.records.company_address
+            if (customerAddr && companyAddr) {
+              const customerLon = Number(customerAddr.longitude)
+              const customerLat = Number(customerAddr.latitude)
+              const companyLon = Number(companyAddr.longitude)
+              const companyLat = Number(companyAddr.latitude)
+
+              // Only calculate if coordinates are non-zero numbers
+              if (
+                !isNaN(customerLon) && !isNaN(customerLat) &&
+                !isNaN(companyLon) && !isNaN(companyLat) &&
+                (customerLon !== 0 || customerLat !== 0) &&
+                (companyLon !== 0 || companyLat !== 0)
+              ) {
+                distanceKm = await calculateDrivingDistance(
+                  [customerLon, customerLat],
+                  [companyLon, companyLat]
+                )
+              }
+            }
+          }
+        }
+      } catch (distErr) {
+        console.error('Failed to calculate driving distance:', distErr)
+        // Set to 0 so we fail safely and still place the order
+        distanceKm = 0
+      }
 
       const orderLines = cart.map(item => ({
         product_id: Number(item.id),
@@ -150,6 +205,7 @@ export default function CartPage({
         body: JSON.stringify({
           partner_id: partnerId,
           date_order: dateOrder,
+          distance_km: distanceKm,
           order_lines: orderLines
         })
       })
@@ -303,10 +359,7 @@ export default function CartPage({
 
               <button
                 type="button"
-                onClick={() => {
-                  onEmptyCart()
-                  addToast(t('cart_emptied_toast'), 'success')
-                }}
+                onClick={() => setShowClearCartConfirm(true)}
                 className="px-4 py-2 border border-rose-250 dark:border-rose-900/30 text-rose-600 dark:text-rose-400 hover:bg-rose-50/40 dark:hover:bg-rose-955/10 rounded-xl text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -533,6 +586,47 @@ export default function CartPage({
             >
               {t('ok_btn')}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Clear Cart Confirmation Modal Overlay */}
+      {showClearCartConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-950/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 md:p-8 max-w-sm w-full shadow-2xl relative animate-scale-up text-left">
+            <div className="w-12 h-12 bg-rose-50 dark:bg-rose-955/20 border border-rose-100 dark:border-rose-900/30 rounded-xl flex items-center justify-center text-rose-600 dark:text-rose-450 mb-4 animate-pulse">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 mb-2">
+              {t('clear_cart_confirm_title', 'Clear your cart?')}
+            </h3>
+            <p className="text-zinc-500 dark:text-zinc-400 text-xs mb-6 leading-relaxed">
+              {t('clear_cart_confirm_message', 'Are you sure you want to remove all items from your cart? This action cannot be undone.')}
+            </p>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setShowClearCartConfirm(false)}
+                className="flex-1 py-2.5 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 font-semibold rounded-xl text-xs transition-all cursor-pointer text-center"
+              >
+                {t('cancel_btn', 'Cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onEmptyCart()
+                  setShowClearCartConfirm(false)
+                  addToast(t('cart_emptied_toast'), 'success')
+                }}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-xs transition-all shadow-sm hover:shadow-md cursor-pointer text-center"
+              >
+                {t('clear_cart_btn', 'Clear Cart')}
+              </button>
+            </div>
           </div>
         </div>
       )}

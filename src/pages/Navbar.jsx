@@ -1,8 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Capacitor } from '@capacitor/core'
 
-export default function Navbar({ user, onLogout, cart, isContentLoading }) {
+export default function Navbar({ 
+  user, 
+  onLogout, 
+  cart, 
+  isContentLoading,
+  isLanguageUpdating,
+  setIsLanguageUpdating
+}) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
@@ -30,6 +38,42 @@ export default function Navbar({ user, onLogout, cart, isContentLoading }) {
     }
   }
 
+  const handleLanguageSwitch = async () => {
+    if (isLanguageUpdating) return
+    setIsLanguageUpdating(true)
+
+    const nextLang = i18n.language === 'en' ? 'gu' : 'en'
+
+    try {
+      const login = user?.username || 'admin'
+      const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
+      const apiLangCode = nextLang === 'en' ? 'en_US' : 'gu_IN'
+
+      const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
+        ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
+        : '/api'
+
+      await fetch(`${API_BASE}/edit_profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'login': login,
+          'api-key': apiKey
+        },
+        body: JSON.stringify({
+          lang: apiLangCode
+        })
+      })
+    } catch (err) {
+      console.error('Failed to update language on backend profile:', err)
+    } finally {
+      // Local language change is only done after the backend has updated
+      i18n.changeLanguage(nextLang)
+      localStorage.setItem('language', nextLang)
+      setIsLanguageUpdating(false)
+    }
+  }
+
   // Total Quantity in Cart for Badge
   const totalCartQty = cart.reduce((sum, item) => sum + item.quantity, 0)
   const isCartActive = location.pathname === '/cart'
@@ -52,12 +96,8 @@ export default function Navbar({ user, onLogout, cart, isContentLoading }) {
         {/* Language Switcher button */}
         <button
           type="button"
-          disabled={isContentLoading}
-          onClick={() => {
-            const nextLang = i18n.language === 'en' ? 'gu' : 'en';
-            i18n.changeLanguage(nextLang);
-            localStorage.setItem('language', nextLang);
-          }}
+          disabled={isContentLoading || isLanguageUpdating}
+          onClick={handleLanguageSwitch}
           className="px-3.5 py-1.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-850 rounded-xl text-xs font-semibold text-zinc-650 dark:text-zinc-300 hover:bg-zinc-200/50 dark:hover:bg-zinc-800 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           title={t('preferred_language')}
         >

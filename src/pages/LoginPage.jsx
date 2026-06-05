@@ -6,7 +6,7 @@ export default function LoginPage({ onLoginSuccess }) {
   const { t, i18n } = useTranslation()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const db = 'rest_apidb'
+  const db = import.meta.env.VITE_DB_NAME || 'rest_api'
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
@@ -25,7 +25,7 @@ export default function LoginPage({ onLoginSuccess }) {
     try {
       // Use absolute URL on Capacitor (mobile) and relative URL on web (to avoid CORS/Cookie restrictions in dev proxy).
       const API_URL = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-        ? 'http://192.168.29.99:8019/odoo_connect'
+        ? `${import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099'}/odoo_connect`
         : '/api/odoo_connect'
 
       const response = await fetch(API_URL, {

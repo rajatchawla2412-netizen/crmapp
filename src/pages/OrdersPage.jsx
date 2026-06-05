@@ -143,7 +143,7 @@ export default function OrdersPage({ user, onLogout }) {
       const login = user?.username || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
       const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-        ? 'http://192.168.29.99:8019'
+        ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
         : '/api'
 
       const url = `${API_BASE}/order_list`
@@ -210,7 +210,7 @@ export default function OrdersPage({ user, onLogout }) {
       const login = user?.username || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
       const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-        ? 'http://192.168.29.99:8019'
+        ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
         : '/api'
 
       const url = `${API_BASE}/cancel_order`
