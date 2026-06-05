@@ -133,7 +133,7 @@ export default function ProductsPage({
         const login = user?.username || 'admin'
         const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
         const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-          ? 'http://192.168.29.1:8089'
+          ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
           : '/api'
 
         const url = `${API_BASE}/category_list`
@@ -143,7 +143,8 @@ export default function ProductsPage({
             'login': login,
             'api-key': apiKey,
             'lang': i18n.language === 'gu' ? 'gu' : 'en'
-          }
+          },
+          timeout: 30000
         })
 
         if (response.ok) {
@@ -195,10 +196,15 @@ export default function ProductsPage({
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
 
       const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-        ? 'http://192.168.29.1:8089'
+        ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
         : '/api'
 
       const categId = selectedCategory.id === 'uncategorized' ? 'false' : selectedCategory.id
+      if (categId === undefined || categId === null) {
+        setIsLoading(false)
+        return
+      }
+
       const url = `${API_BASE}/category_products?model=product.category&categ_id=${categId}`
 
       const response = await fetch(url, {
@@ -207,7 +213,8 @@ export default function ProductsPage({
           'login': login,
           'api-key': apiKey,
           'lang': i18n.language === 'gu' ? 'gu' : 'en'
-        }
+        },
+        timeout: 30000
       })
 
       if (response.status === 401 || response.status === 403) {
