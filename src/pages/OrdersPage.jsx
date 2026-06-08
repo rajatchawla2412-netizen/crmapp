@@ -143,6 +143,7 @@ export default function OrdersPage({ user, onLogout }) {
     try {
       const login = user?.username || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
+      const db = user?.db || localStorage.getItem('server-db') || ''
       const API_BASE = getApiBaseUrl()
 
       const url = `${API_BASE}/order_list`
@@ -151,6 +152,7 @@ export default function OrdersPage({ user, onLogout }) {
         headers: {
           'login': login,
           'api-key': apiKey,
+          'db': db,
           'lang': i18n.language === 'gu' ? 'gu' : 'en'
         }
       })
@@ -208,6 +210,7 @@ export default function OrdersPage({ user, onLogout }) {
     try {
       const login = user?.username || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
+      const db = user?.db || localStorage.getItem('server-db') || ''
       const API_BASE = getApiBaseUrl()
 
       const url = `${API_BASE}/cancel_order`
@@ -217,6 +220,7 @@ export default function OrdersPage({ user, onLogout }) {
           'Content-Type': 'application/json',
           'login': login,
           'api-key': apiKey,
+          'db': db,
           'lang': i18n.language === 'gu' ? 'gu' : 'en'
         },
         body: JSON.stringify({

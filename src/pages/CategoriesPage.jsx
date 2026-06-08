@@ -117,6 +117,7 @@ export default function CategoriesPage({ user, onLogout }) {
     try {
       const login = user?.username || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
+      const db = user?.db || localStorage.getItem('server-db') || ''
 
       const API_BASE = getApiBaseUrl()
 
@@ -127,6 +128,7 @@ export default function CategoriesPage({ user, onLogout }) {
         headers: {
           'login': login,
           'api-key': apiKey,
+          'db': db,
           'lang': 'en'
         }
       })
@@ -156,6 +158,7 @@ export default function CategoriesPage({ user, onLogout }) {
             headers: {
               'login': login,
               'api-key': apiKey,
+              'db': db,
               'lang': 'gu'
             }
           })

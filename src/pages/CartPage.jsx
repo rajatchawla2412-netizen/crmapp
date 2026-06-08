@@ -121,6 +121,7 @@ export default function CartPage({
     try {
       const login = user?.username || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
+      const db = user?.db || localStorage.getItem('server-db') || ''
       const partnerId = Number(user?.partner_id || 9)
 
       const API_BASE = getApiBaseUrl()
@@ -137,6 +138,7 @@ export default function CartPage({
           headers: {
             'login': login,
             'api-key': apiKey,
+            'db': db,
             'lang': lang
           }
         })
@@ -199,6 +201,7 @@ export default function CartPage({
           'Content-Type': 'application/json',
           'login': login,
           'api-key': apiKey,
+          'db': db,
           'lang': i18n.language === 'gu' ? 'gu' : 'en'
         },
         body: JSON.stringify({

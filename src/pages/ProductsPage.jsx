@@ -133,6 +133,7 @@ export default function ProductsPage({
       try {
         const login = user?.username || 'admin'
         const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
+        const db = user?.db || localStorage.getItem('server-db') || ''
         const API_BASE = getApiBaseUrl()
 
         const url = `${API_BASE}/category_list`
@@ -141,6 +142,7 @@ export default function ProductsPage({
           headers: {
             'login': login,
             'api-key': apiKey,
+            'db': db,
             'lang': i18n.language === 'gu' ? 'gu' : 'en'
           },
           timeout: 30000
@@ -193,6 +195,7 @@ export default function ProductsPage({
     try {
       const login = user?.username || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
+      const db = user?.db || localStorage.getItem('server-db') || ''
 
       const API_BASE = getApiBaseUrl()
 
@@ -209,6 +212,7 @@ export default function ProductsPage({
         headers: {
           'login': login,
           'api-key': apiKey,
+          'db': db,
           'lang': i18n.language === 'gu' ? 'gu' : 'en'
         },
         timeout: 30000

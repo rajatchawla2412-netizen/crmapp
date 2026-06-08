@@ -126,6 +126,7 @@ function App() {
 
     const login = user?.username || 'admin'
     const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
+    const db = user?.db || localStorage.getItem('server-db') || ''
     const partnerId = Number(user?.partner_id || editingOrder.partner_id || editingOrder.customer_id || 9)
     const API_BASE = getApiBaseUrl()
 
@@ -170,6 +171,7 @@ function App() {
         'Content-Type': 'application/json',
         'login': login,
         'api-key': apiKey,
+        'db': db,
         'lang': i18n.language === 'gu' ? 'gu' : 'en'
       },
       body: JSON.stringify(payload)

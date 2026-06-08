@@ -55,6 +55,7 @@ export default function Navbar({
     try {
       const login = user?.username || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
+      const db = user?.db || localStorage.getItem('server-db') || ''
       const apiLangCode = nextLang === 'en' ? 'en_US' : 'gu_IN'
 
       const API_BASE = getApiBaseUrl()
@@ -64,7 +65,8 @@ export default function Navbar({
         headers: {
           'Content-Type': 'application/json',
           'login': login,
-          'api-key': apiKey
+          'api-key': apiKey,
+          'db': db
         },
         body: JSON.stringify({
           lang: apiLangCode
