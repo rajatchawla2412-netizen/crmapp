@@ -8,6 +8,7 @@ import CategoriesPage from './pages/CategoriesPage'
 import ProductsPage from './pages/ProductsPage'
 import CartPage from './pages/CartPage'
 import OrdersPage from './pages/OrdersPage'
+import UserPage from './pages/UserPage'
 import { getApiBaseUrl } from './utils/api'
 import './App.css'
 
@@ -308,6 +309,10 @@ function App() {
           <Route
             path="orders"
             element={<OrdersPage user={user} onLogout={handleLogout} />}
+          />
+          <Route
+            path="user"
+            element={<UserPage user={user} onLogout={handleLogout} />}
           />
         </Route>
 

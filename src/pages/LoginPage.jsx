@@ -381,7 +381,7 @@ export default function LoginPage({ onLoginSuccess }) {
                       value={serverUrl}
                       onChange={(e) => setServerUrl(e.target.value)}
                       placeholder="e.g. demo.odoo.com"
-                      className="w-full px-4 py-3.5 pr-11 text-[15px] font-medium text-zinc-900 dark:text-zinc-100 bg-white/40 dark:bg-zinc-950/40 border border-zinc-200/80 dark:border-zinc-800/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:focus:ring-brand-500/30 focus:border-brand-500 dark:focus:border-brand-500 transition-all duration-200 "
+                      className="w-full px-4 py-3.5 pr-11 text-[15px] font-medium text-zinc-900 dark:text-zinc-100 bg-white/40 dark:bg-zinc-950/40 border border-zinc-200/80 dark:border-zinc-800/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:focus:ring-brand-500/30 focus:border-brand-500 dark:focus:border-brand-500 transition-all duration-200 backdrop-blur-sm"
                       required
                       disabled={isLoading}
                     />

@@ -75,7 +75,7 @@ function CategoryImage({ src, name }) {
 
   if (!imageSrc || hasError) {
     return (
-      <div className="w-20 h-20 rounded-xl bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 flex items-center justify-center text-zinc-400 dark:text-zinc-500 font-bold text-lg select-none">
+      <div className="w-full h-full bg-zinc-100 dark:bg-zinc-850 flex items-center justify-center text-zinc-400 dark:text-zinc-500 font-bold text-xl select-none">
         {getInitials(name)}
       </div>
     )
@@ -86,7 +86,7 @@ function CategoryImage({ src, name }) {
       src={imageSrc}
       alt={name}
       onError={() => setHasError(true)}
-      className="w-20 h-20 object-contain rounded-xl"
+      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
     />
   )
 }
@@ -247,10 +247,12 @@ export default function CategoriesPage({ user, onLogout }) {
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={`skeleton-${i}`}
-              className="aspect-square flex flex-col items-center justify-center p-6 bg-zinc-50/60 dark:bg-zinc-900/10 border border-zinc-200 dark:border-zinc-800 rounded-2xl animate-pulse"
+              className="relative aspect-square bg-zinc-150/40 dark:bg-zinc-900/15 border border-zinc-200/50 dark:border-zinc-800/50 rounded-3xl animate-pulse overflow-hidden"
             >
-              <div className="w-20 h-20 bg-zinc-200 dark:bg-zinc-800 rounded-xl mb-4"></div>
-              <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-20"></div>
+              <div className="w-full h-full bg-zinc-200/50 dark:bg-zinc-800/40"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-12 bg-white/60 dark:bg-zinc-950/60 border-t border-zinc-200/30 dark:border-zinc-800/30 flex items-center justify-center px-4">
+                <div className="h-3.5 bg-zinc-200 dark:bg-zinc-800 rounded w-2/3"></div>
+              </div>
             </div>
           ))}
         </section>
@@ -265,16 +267,19 @@ export default function CategoriesPage({ user, onLogout }) {
               onClick={() => {
                 navigate(`/products/${category.id}`, { state: { category } })
               }}
-              className="aspect-square flex flex-col items-center justify-center p-6 bg-zinc-50/60 dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-800 rounded-2xl hover:border-purple-300 dark:hover:border-purple-800 cursor-pointer transition-all duration-300 select-none"
+              className="relative aspect-square rounded-3xl overflow-hidden border border-zinc-200/50 dark:border-zinc-800/60 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.99] hover:border-purple-300 dark:hover:border-purple-800/60 transition-all duration-300 group cursor-pointer select-none"
             >
-              {/* Category Image */}
-              <div className="w-20 h-20 flex items-center justify-center overflow-hidden flex-shrink-0 mb-4">
+              {/* Category Image - Fills the card */}
+              <div className="w-full h-full flex items-center justify-center overflow-hidden">
                 <CategoryImage src={category.image} name={category.name} />
               </div>
-              {/* Category Title */}
-              <h3 className="font-semibold text-sm text-zinc-900 dark:text-zinc-50 truncate w-full text-center px-1">
-                {category.name || category.display_name}
-              </h3>
+              
+              {/* Category Title - Overlay at the bottom */}
+              <div className="absolute bottom-0 left-0 right-0 bg-white/75 dark:bg-zinc-950/75 backdrop-blur-md border-t border-zinc-200/20 dark:border-zinc-800/20 py-2.5 px-3 flex items-center justify-center text-center">
+                <h3 className="font-bold text-xs text-zinc-900 dark:text-zinc-100 truncate w-full">
+                  {category.name || category.display_name}
+                </h3>
+              </div>
             </div>
           ))}
         </section>
