@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation, useOutletContext } from 'react-rou
 import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import PullToRefresh from 'react-simple-pull-to-refresh'
+import { getApiBaseUrl } from '../utils/api'
 
 const isShippingProduct = (item) => {
   if (!item) return false;
@@ -132,9 +133,7 @@ export default function ProductsPage({
       try {
         const login = user?.username || 'admin'
         const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
-        const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-          ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
-          : '/api'
+        const API_BASE = getApiBaseUrl()
 
         const url = `${API_BASE}/category_list`
         const response = await fetch(url, {
@@ -195,9 +194,7 @@ export default function ProductsPage({
       const login = user?.username || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
 
-      const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-        ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
-        : '/api'
+      const API_BASE = getApiBaseUrl()
 
       const categId = selectedCategory.id === 'uncategorized' ? 'false' : selectedCategory.id
       if (categId === undefined || categId === null) {

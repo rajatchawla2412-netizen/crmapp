@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import { calculateDrivingDistance } from '../utils/distanceService'
+import { getApiBaseUrl } from '../utils/api'
 
 const isShippingProduct = (item) => {
   if (!item) return false;
@@ -122,9 +123,7 @@ export default function CartPage({
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
       const partnerId = Number(user?.partner_id || 9)
 
-      const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-        ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
-        : '/api'
+      const API_BASE = getApiBaseUrl()
 
       const API_URL = `${API_BASE}/create_order`
 

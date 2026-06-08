@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import PullToRefresh from 'react-simple-pull-to-refresh'
+import { getApiBaseUrl } from '../utils/api'
 
 // Minimalist Pull to Refresh components
 const PullingIndicator = () => (
@@ -142,9 +143,7 @@ export default function OrdersPage({ user, onLogout }) {
     try {
       const login = user?.username || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
-      const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-        ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
-        : '/api'
+      const API_BASE = getApiBaseUrl()
 
       const url = `${API_BASE}/order_list`
       const response = await fetch(url, {
@@ -209,9 +208,7 @@ export default function OrdersPage({ user, onLogout }) {
     try {
       const login = user?.username || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
-      const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-        ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
-        : '/api'
+      const API_BASE = getApiBaseUrl()
 
       const url = `${API_BASE}/cancel_order`
       const response = await fetch(url, {

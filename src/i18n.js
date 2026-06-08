@@ -92,7 +92,15 @@ const resources = {
       saving_changes: "Saving Changes...",
       order_updated_success: "Order updated successfully.",
       edit_order_conflict: "You are currently editing another order. Do you want to discard those changes and edit this order instead?",
-      editing_order_cart_notice: "You are currently editing Order: {{orderNumber}}. Your changes will be saved to this order when you check out."
+      editing_order_cart_notice: "You are currently editing Order: {{orderNumber}}. Your changes will be saved to this order when you check out.",
+      db_server_url: "Database Server URL*",
+      connection_type: "Connection Type",
+      select_database: "Select Database*",
+      connecting: "Connecting...",
+      connection_success: "Server connected successfully!",
+      connection_error: "Connection failed. Check URL.",
+      reset_logout_btn: "Reset & Full Logout",
+      reset_logout_confirm: "Are you sure you want to log out fully? This will clear all saved server configuration and databases."
     }
   },
   gu: {
@@ -186,7 +194,15 @@ const resources = {
       saving_changes: "ફેરફારો સાચવવામાં આવી રહ્યા છે...",
       order_updated_success: "ઓર્ડર સફળતાપૂર્વક અપડેટ કરવામાં આવ્યો.",
       edit_order_conflict: "તમે હાલમાં બીજો ઓર્ડર સુધારી રહ્યા છો. શું તમે તે ફેરફારો રદ કરીને આ ઓર્ડર સુધારવા માંગો છો?",
-      editing_order_cart_notice: "તમે હાલમાં ઓર્ડર સુધારી રહ્યા છો: {{orderNumber}}. જ્યારે તમે ચેકઆઉટ કરશો ત્યારે તમારા ફેરફારો આ ઓર્ડરમાં સાચવવામાં આવશે."
+      editing_order_cart_notice: "તમે હાલમાં ઓર્ડર સુધારી રહ્યા છો: {{orderNumber}}. જ્યારે તમે ચેકઆઉટ કરશો ત્યારે તમારા ફેરફારો આ ઓર્ડરમાં સાચવવામાં આવશે.",
+      db_server_url: "ડેટાબેઝ સર્વર URL*",
+      connection_type: "કનેક્શન પ્રકાર",
+      select_database: "ડેટાબેઝ પસંદ કરો*",
+      connecting: "જોડાણ થઈ રહ્યું છે...",
+      connection_success: "સર્વર સફળતાપૂર્વક કનેક્ટ થયું!",
+      connection_error: "કનેક્શન નિષ્ફળ ગયું. URL તપાસો.",
+      reset_logout_btn: "રીસેટ અને પૂર્ણ લોગઆઉટ",
+      reset_logout_confirm: "શું તમે ખરેખર સંપૂર્ણ લોગઆઉટ કરવા માંગો છો? આ તમામ સેવ કરેલ સર્વર કન્ફિગરેશન અને ડેટાબેઝને ભૂંસી નાખશે."
     }
   }
 };

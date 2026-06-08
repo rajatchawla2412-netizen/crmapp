@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
+import { getApiBaseUrl } from '../utils/api'
 
 export default function Navbar({ 
   user, 
@@ -34,7 +35,14 @@ export default function Navbar({
   const handleLogoutClick = () => {
     const confirmLogout = window.confirm(t('logout_confirm'))
     if (confirmLogout) {
-      onLogout()
+      onLogout(false)
+    }
+  }
+
+  const handleFullLogoutClick = () => {
+    const confirmLogout = window.confirm(t('reset_logout_confirm'))
+    if (confirmLogout) {
+      onLogout(true)
     }
   }
 
@@ -49,9 +57,7 @@ export default function Navbar({
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
       const apiLangCode = nextLang === 'en' ? 'en_US' : 'gu_IN'
 
-      const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-        ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
-        : '/api'
+      const API_BASE = getApiBaseUrl()
 
       await fetch(`${API_BASE}/edit_profile`, {
         method: 'PUT',
@@ -193,6 +199,21 @@ export default function Navbar({
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
                   </svg>
                   <span>{t('logout_btn')}</span>
+                </button>
+
+                {/* Reset & Full Logout option */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDropdown(false)
+                    handleFullLogoutClick()
+                  }}
+                  className="w-full px-4 py-2.5 text-xs font-medium text-rose-600 dark:text-rose-455 hover:bg-rose-50/50 dark:hover:bg-rose-955/20 flex items-center gap-2 cursor-pointer transition-colors border-t border-zinc-100 dark:border-zinc-900"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                  </svg>
+                  <span>{t('reset_logout_btn')}</span>
                 </button>
               </div>
             </div>

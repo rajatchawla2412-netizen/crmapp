@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import PullToRefresh from 'react-simple-pull-to-refresh'
+import { getApiBaseUrl } from '../utils/api'
 
 // Minimalist Pull to Refresh components
 const PullingIndicator = () => (
@@ -117,9 +118,7 @@ export default function CategoriesPage({ user, onLogout }) {
       const login = user?.username || 'admin'
       const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
 
-      const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-        ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
-        : '/api'
+      const API_BASE = getApiBaseUrl()
 
       const categoriesUrl = `${API_BASE}/category_list`
       // Always fetch in English first to ensure image data is loaded

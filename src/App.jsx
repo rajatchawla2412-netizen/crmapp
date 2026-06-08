@@ -8,6 +8,7 @@ import CategoriesPage from './pages/CategoriesPage'
 import ProductsPage from './pages/ProductsPage'
 import CartPage from './pages/CartPage'
 import OrdersPage from './pages/OrdersPage'
+import { getApiBaseUrl } from './utils/api'
 import './App.css'
 
 function AndroidBackButtonHandler() {
@@ -77,7 +78,7 @@ function App() {
     localStorage.setItem('user', JSON.stringify(userData))
   }
 
-  const handleLogout = () => {
+  const handleLogout = (clearServerSettings = false) => {
     setIsLoggedIn(false)
     setUser(null)
     localStorage.removeItem('user')
@@ -86,6 +87,14 @@ function App() {
     localStorage.removeItem('editingOrder')
     setCart([])
     setEditingOrder(null)
+    
+    if (clearServerSettings === true) {
+      localStorage.removeItem('server-url')
+      localStorage.removeItem('server-url-raw')
+      localStorage.removeItem('server-scheme')
+      localStorage.removeItem('server-db')
+      localStorage.removeItem('server-db-list')
+    }
   }
 
   const startEditingOrder = (order) => {
@@ -118,9 +127,7 @@ function App() {
     const login = user?.username || 'admin'
     const apiKey = user?.apiKey || localStorage.getItem('api-key') || ''
     const partnerId = Number(user?.partner_id || editingOrder.partner_id || editingOrder.customer_id || 9)
-    const API_BASE = (Capacitor.isNativePlatform() || !import.meta.env.DEV)
-      ? (import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099')
-      : '/api'
+    const API_BASE = getApiBaseUrl()
 
     const url = `${API_BASE}/edit_order`
 

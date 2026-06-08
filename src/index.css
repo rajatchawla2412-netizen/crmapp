@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand-600: #6941c6;
+  --color-brand-700: #5b37ad;
+  --color-brand-50: #f9f5ff;
+  --color-brand-900: #4a2899;
+  --color-brand-950: #2c1a53;
+}
+
 .ptr__pull-down--pull-more {
   text-align: center;
 }
+
