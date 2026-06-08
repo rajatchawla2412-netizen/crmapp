@@ -286,7 +286,7 @@ export default function LoginPage({ onLoginSuccess }) {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 bg-gradient-to-br from-indigo-50/60 via-zinc-50 to-purple-50/60 dark:from-[#080512] dark:via-zinc-950 dark:to-[#120a2b] transition-colors duration-300 relative min-h-screen overflow-hidden">
+    <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 bg-zinc-950 transition-colors duration-300 relative min-h-screen overflow-hidden">
 
       {/* Background Blur Blobs */}
       <div className="absolute top-[20%] left-[20%] w-[320px] h-[320px] rounded-full bg-brand-600/10 dark:bg-brand-600/5 blur-[90px] pointer-events-none select-none"></div>
@@ -300,7 +300,7 @@ export default function LoginPage({ onLoginSuccess }) {
           i18n.changeLanguage(nextLang);
           localStorage.setItem('language', nextLang);
         }}
-        className="absolute top-6 right-6 px-3.5 py-1.5 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 rounded-full text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-white/80 dark:hover:bg-zinc-900/80 transition-all shadow-sm flex items-center gap-1.5 cursor-pointer z-20"
+        className="absolute top-6 right-6 px-3.5 py-1.5 bg-brand-50/50 hover:bg-brand-50 dark:bg-brand-950/20 dark:hover:bg-brand-950/40 border border-brand-200/50 dark:border-brand-900/30 rounded-full text-sm font-semibold text-brand-600 dark:text-brand-400 transition-all shadow-sm flex items-center gap-1.5 cursor-pointer z-20"
       >
         <svg className="w-4 h-4 text-zinc-450 dark:text-zinc-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-.554-8.243-1.548m16.5 0a8.997 8.997 0 01-1.863 5.06M3.91 9c.18-.287.375-.56.586-.816m-.586.816A9.004 9.004 0 003 12c0 2.083.704 3.999 1.884 5.517m0 0a8.997 8.997 0 007.843 4.582M12 3c.132 0 .263.003.394.01M12 3c-.132 0-.263.003-.394.01"></path>

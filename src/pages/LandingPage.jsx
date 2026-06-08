@@ -16,7 +16,7 @@ export default function LandingPage({
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
-  
+
   const [toasts, setToasts] = useState([])
   const [isSaving, setIsSaving] = useState(false)
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false)
@@ -147,17 +147,17 @@ export default function LandingPage({
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50/60 via-zinc-50 to-purple-50/60 dark:from-[#080512] dark:via-zinc-950 dark:to-[#120a2b] flex flex-col relative overflow-hidden transition-colors duration-300">
+    <div className="fixed inset-0 bg-zinc-950 flex flex-col overflow-hidden transition-colors duration-300">
       
       {/* Background Blur Blobs */}
       <div className="absolute top-[10%] left-[10%] w-[450px] h-[450px] rounded-full bg-brand-600/10 dark:bg-brand-600/5 blur-[120px] pointer-events-none select-none"></div>
       <div className="absolute bottom-[10%] right-[10%] w-[400px] h-[400px] rounded-full bg-indigo-500/10 dark:bg-indigo-500/5 blur-[120px] pointer-events-none select-none"></div>
 
-      {/* Main Container - Full width on desktop, phone padding on mobile */}
-      <div className="w-full flex-1 flex flex-col pb-20 md:pb-0 relative z-10 bg-white/40 dark:bg-zinc-950/20 backdrop-blur-md transition-colors duration-300">
+      {/* Main Container - Full height flexbox, overflow hidden */}
+      <div className="w-full h-full flex flex-col relative z-10 bg-white/40 dark:bg-zinc-950/20 backdrop-blur-md transition-colors duration-300 overflow-hidden">
         
-        {/* Sticky Header with Responsive elements */}
-        <header className="sticky top-0 z-40 w-full bg-white/30 dark:bg-zinc-950/30 backdrop-blur-md border-b border-zinc-200/30 dark:border-zinc-800/35 px-4 md:px-6 py-4 flex items-center justify-between transition-colors duration-300">
+        {/* Header - Fixed to top, will not scroll */}
+        <header className="flex-shrink-0 z-40 w-full bg-white/30 dark:bg-zinc-950/30 backdrop-blur-md border-b border-zinc-200/30 dark:border-zinc-800/35 px-4 md:px-6 py-4 flex items-center justify-between transition-colors duration-300">
           <div className="flex items-center gap-6">
             {/* Branding Logo */}
             <div className="flex items-center gap-2.5 cursor-pointer select-none" onClick={() => navigate('/')}>
@@ -175,22 +175,20 @@ export default function LandingPage({
             <nav className="hidden md:flex items-center gap-1">
               <button
                 onClick={() => navigate('/')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
-                  isHomeActive
-                    ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-950/20'
-                    : 'text-zinc-650 hover:text-zinc-900 dark:text-zinc-350 dark:hover:text-zinc-100'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${isHomeActive
+                  ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-950/20'
+                  : 'text-zinc-650 hover:text-zinc-900 dark:text-zinc-100 dark:hover:text-zinc-100'
+                  }`}
               >
                 <span>{t('home') || 'Home'}</span>
               </button>
 
               <button
                 onClick={() => navigate('/cart')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 cursor-pointer relative ${
-                  isCartActive
-                    ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-950/20'
-                    : 'text-zinc-650 hover:text-zinc-900 dark:text-zinc-350 dark:hover:text-zinc-100'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 cursor-pointer relative ${isCartActive
+                  ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-950/20'
+                  : 'text-zinc-650 hover:text-zinc-900 dark:text-zinc-100 dark:hover:text-zinc-100'
+                  }`}
               >
                 <span>{t('cart') || 'Cart'}</span>
                 {totalCartQty > 0 && (
@@ -208,7 +206,7 @@ export default function LandingPage({
               type="button"
               disabled={isContentLoading || isLanguageUpdating}
               onClick={handleLanguageSwitch}
-              className="px-3.5 py-1.5 bg-white/40 dark:bg-zinc-900/40 border border-zinc-200/60 dark:border-zinc-800/60 rounded-full text-xs font-semibold text-zinc-650 dark:text-zinc-300 hover:bg-white/80 dark:hover:bg-zinc-800/80 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="px-3.5 py-1.5 bg-brand-50/50 hover:bg-brand-50 dark:bg-brand-950/20 dark:hover:bg-brand-950/40 border border-brand-200/50 dark:border-brand-900/30 rounded-full text-xs font-semibold text-brand-600 dark:text-brand-400 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               title={t('preferred_language')}
             >
               <svg className="w-4 h-4 text-zinc-450 dark:text-zinc-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -260,7 +258,7 @@ export default function LandingPage({
                       </svg>
                       <span>{t('my_orders') || 'My Orders'}</span>
                     </button>
-                    
+
                     <button
                       type="button"
                       onClick={() => {
@@ -297,7 +295,7 @@ export default function LandingPage({
 
         {/* Edit Order Banner */}
         {editingOrder && (
-          <div className="w-full bg-amber-500/10 dark:bg-amber-500/15 border-b border-amber-200/50 dark:border-amber-900/30 backdrop-blur-md px-4 py-2.5 flex items-center justify-between gap-3 animate-fade-in z-30">
+          <div className="flex-shrink-0 w-full bg-amber-500/10 dark:bg-amber-500/15 border-b border-amber-200/50 dark:border-amber-900/30 backdrop-blur-md px-4 py-2.5 flex items-center justify-between gap-3 animate-fade-in z-30">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
               <p className="text-[10px] font-bold text-amber-850 dark:text-amber-300">
@@ -330,16 +328,15 @@ export default function LandingPage({
         {mainContent}
 
         {/* Bottom Tab Bar (Visible on Mobile only, hidden on Desktop) */}
-        <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/30 dark:bg-zinc-950/30 backdrop-blur-md border-t border-zinc-200/30 dark:border-zinc-800/35 pb-safe-bottom">
+        <nav className="flex-shrink-0 md:hidden bg-white/30 dark:bg-zinc-950/30 backdrop-blur-md border-t border-zinc-200/30 dark:border-zinc-800/35 pb-safe-bottom">
           <div className="flex items-center justify-around py-3 px-4">
             {/* Home Tab */}
             <button
               onClick={() => navigate('/')}
-              className={`flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 active:scale-95 ${
-                isHomeActive
-                  ? 'text-brand-600 dark:text-brand-400 font-bold scale-105'
-                  : 'text-zinc-400 hover:text-zinc-550 dark:hover:text-zinc-350'
-              }`}
+              className={`flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 active:scale-95 ${isHomeActive
+                ? 'text-brand-600 dark:text-brand-400 font-bold scale-105'
+                : 'text-zinc-400 hover:text-zinc-550 dark:hover:text-zinc-350'
+                }`}
             >
               <svg className="w-5.5 h-5.5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
@@ -350,11 +347,10 @@ export default function LandingPage({
             {/* Cart Tab */}
             <button
               onClick={() => navigate('/cart')}
-              className={`relative flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 active:scale-95 ${
-                isCartActive
-                  ? 'text-brand-600 dark:text-brand-400 font-bold scale-105'
-                  : 'text-zinc-400 hover:text-zinc-555 dark:hover:text-zinc-350'
-              }`}
+              className={`relative flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 active:scale-95 ${isCartActive
+                ? 'text-brand-600 dark:text-brand-400 font-bold scale-105'
+                : 'text-zinc-400 hover:text-zinc-555 dark:hover:text-zinc-350'
+                }`}
             >
               <svg className="w-5.5 h-5.5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
@@ -370,11 +366,10 @@ export default function LandingPage({
             {/* User Tab */}
             <button
               onClick={() => navigate('/user')}
-              className={`flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 active:scale-95 ${
-                isUserActive
-                  ? 'text-brand-600 dark:text-brand-400 font-bold scale-105'
-                  : 'text-zinc-400 hover:text-zinc-555 dark:hover:text-zinc-350'
-              }`}
+              className={`flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 active:scale-95 ${isUserActive
+                ? 'text-brand-600 dark:text-brand-400 font-bold scale-105'
+                : 'text-zinc-400 hover:text-zinc-555 dark:hover:text-zinc-350'
+                }`}
             >
               <svg className="w-5.5 h-5.5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -395,8 +390,8 @@ export default function LandingPage({
           >
             <div className="flex items-center gap-3">
               <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${toast.type === 'error'
-                  ? 'bg-rose-500/20 border border-rose-500/30 text-rose-400'
-                  : 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
+                ? 'bg-rose-500/20 border border-rose-500/30 text-rose-400'
+                : 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
                 }`}>
                 {toast.type === 'error' ? (
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">

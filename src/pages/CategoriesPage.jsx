@@ -37,14 +37,14 @@ function CategoryImage({ src, name }) {
     if (img.startsWith('data:') || img.startsWith('http://') || img.startsWith('https://') || img.startsWith('/') || img.startsWith('blob:')) {
       return img;
     }
-    
+
     let cleanImg = img.trim().replace(/\s/g, '');
-    
+
     // Strip Python byte string wrapper b'...'
     if (cleanImg.startsWith("b'") && cleanImg.endsWith("'")) {
       cleanImg = cleanImg.slice(2, -1);
     }
-    
+
     // Check for double base64 encoding
     try {
       const decodedOnce = atob(cleanImg);
@@ -267,16 +267,16 @@ export default function CategoriesPage({ user, onLogout }) {
               onClick={() => {
                 navigate(`/products/${category.id}`, { state: { category } })
               }}
-              className="relative aspect-square rounded-3xl overflow-hidden border border-zinc-200/50 dark:border-zinc-800/60 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.99] hover:border-purple-300 dark:hover:border-purple-800/60 transition-all duration-300 group cursor-pointer select-none"
+              className="relative aspect-square rounded-3xl overflow-hidden border-zinc-900 dark:border-zinc-900 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.99] hover:border-purple-400 dark:hover:border-purple-700 transition-all duration-300 group cursor-pointer select-none"
             >
               {/* Category Image - Fills the card */}
               <div className="w-full h-full flex items-center justify-center overflow-hidden">
                 <CategoryImage src={category.image} name={category.name} />
               </div>
-              
+
               {/* Category Title - Overlay at the bottom */}
-              <div className="absolute bottom-0 left-0 right-0 bg-white/75 dark:bg-zinc-950/75 backdrop-blur-md border-t border-zinc-200/20 dark:border-zinc-800/20 py-2.5 px-3 flex items-center justify-center text-center">
-                <h3 className="font-bold text-xs text-zinc-900 dark:text-zinc-100 truncate w-full">
+              <div className="absolute bottom-0 left-0 right-0 bg-white/75 dark:bg-zinc-950/75 backdrop-blur-md border-t border-zinc-300 dark:border-zinc-750 py-2.5 px-3 flex items-center justify-center text-center">
+                <h3 className="font-bold text-sm text-zinc-900 dark:text-zinc-100 truncate w-full">
                   {category.name || category.display_name}
                 </h3>
               </div>

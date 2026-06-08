@@ -324,13 +324,14 @@ export default function ProductsPage({
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={`prod-skeleton-${i}`}
-              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 animate-pulse flex flex-col justify-between aspect-[3/4]"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 animate-pulse flex flex-col"
             >
-              <div className="w-full aspect-square bg-zinc-200 dark:bg-zinc-800 rounded-xl mb-3"></div>
-              <div className="h-3.5 bg-zinc-200 dark:bg-zinc-800 rounded w-2/3 mb-2"></div>
-              <div className="flex justify-between items-center mt-2">
-                <div className="h-3.5 bg-zinc-200 dark:bg-zinc-800 rounded w-12"></div>
-                <div className="w-7.5 h-7.5 bg-zinc-200 dark:bg-zinc-800 rounded-lg"></div>
+              <div className="relative w-full aspect-square bg-zinc-200 dark:bg-zinc-800 rounded-xl mb-3 flex-shrink-0">
+                <div className="absolute bottom-2 right-2 w-9 h-9 bg-zinc-300 dark:bg-zinc-700 rounded-lg"></div>
+              </div>
+              <div className="flex justify-between items-start gap-2 mt-1">
+                <div className="h-3.5 bg-zinc-200 dark:bg-zinc-800 rounded w-2/3"></div>
+                <div className="h-3.5 bg-zinc-200 dark:bg-zinc-800 rounded w-12 flex-shrink-0"></div>
               </div>
             </div>
           ))}
@@ -353,82 +354,75 @@ export default function ProductsPage({
             return (
               <div
                 key={product.id}
-                className="bg-zinc-50/60 dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col justify-between hover:border-purple-800 dark:hover:border-purple-800 transition-all duration-300 relative text-left"
+                className="bg-zinc-50/60 dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col hover:border-purple-800 dark:hover:border-purple-800 transition-all duration-300 relative text-left"
               >
                 {/* Product Image section */}
-                <div className="w-full aspect-square flex items-center justify-center overflow-hidden flex-shrink-0">
+                <div className="relative w-full aspect-square flex items-center justify-center rounded-xl overflow-hidden flex-shrink-0">
                   <ProductImage src={product.image} name={product.name} />
+
+                  {/* Quantity selectors or Add Button */}
+                  <div className="absolute bottom-2 right-2 z-10">
+                    {cartQuantity > 0 ? (
+                      editingOrder && isShippingProduct(product) ? (
+                        <div className="px-2.5 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 dark:text-zinc-400 shadow-md">
+                          {t('qty_label', { defaultValue: 'Qty' })}: {cartQuantity}
+                        </div>
+                      ) : (
+                        <div className="flex items-center bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 p-0.5 rounded-xl shadow-md">
+                          <button
+                            type="button"
+                            disabled={editingOrder && isShippingProduct(product) && cartQuantity === 1}
+                            onClick={() => {
+                              if (cartQuantity === 1) {
+                                onRemoveItem(product.id)
+                              } else {
+                                onUpdateQuantity(product.id, cartQuantity - 1)
+                              }
+                            }}
+                            className="w-8 h-8 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            -
+                          </button>
+                          <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-50 px-2 min-w-[16px] text-center">
+                            {cartQuantity}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => onUpdateQuantity(product.id, cartQuantity + 1)}
+                            className="w-8 h-8 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                          >
+                            +
+                          </button>
+                        </div>
+                      )
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onAddToCart(product, 1)
+                          addToast(t('added_to_cart_toast', { name: product.name, quantity: 1 }), 'success')
+                        }}
+                        className="w-9 h-9 bg-[#6941c6] hover:bg-[#5b37ad] text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center cursor-pointer animate-btn-in"
+                        title={t('add_to_cart')}
+                      >
+                        <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Product Details Section */}
-                <div className="flex-1 flex flex-col justify-between mt-3">
-                  <h4 className="font-semibold text-xs text-zinc-900 dark:text-zinc-100 leading-snug line-clamp-2 min-h-[32px] overflow-hidden" title={product.name}>
+                <div className="mt-3 flex items-start justify-between gap-2">
+                  <h4 className="font-semibold text-xs text-zinc-900 dark:text-zinc-100 leading-snug line-clamp-2 overflow-hidden" title={product.name}>
                     {product.display_name}
                   </h4>
-
-
-
-                  {/* Pricing and Action button row */}
-                  <div className="flex items-center justify-between mt-4">
-                    {/* Price display */}
-                    <div className="flex items-center gap-0.5">
-                      <span className="text-xs font-semibold text-[#6941c6] dark:text-purple-400">₹</span>
-                      <span className="text-xs font-bold text-zinc-950 dark:text-zinc-50">
-                        {Number(product.price).toFixed(2)}
-                      </span>
-                    </div>
-
-                    {/* Quantity selectors or Add Button */}
-                    <div className="flex-shrink-0">
-                      {cartQuantity > 0 ? (
-                        editingOrder && isShippingProduct(product) ? (
-                          <div className="px-2.5 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                            {t('qty_label', { defaultValue: 'Qty' })}: {cartQuantity}
-                          </div>
-                        ) : (
-                          <div className="flex items-center bg-white dark:bg-zinc-700 border border-zinc-200 dark:border-zinc-800 p-0.5 rounded-lg">
-                            <button
-                              type="button"
-                              disabled={editingOrder && isShippingProduct(product) && cartQuantity === 1}
-                              onClick={() => {
-                                if (cartQuantity === 1) {
-                                  onRemoveItem(product.id)
-                                } else {
-                                  onUpdateQuantity(product.id, cartQuantity - 1)
-                                }
-                              }}
-                              className="w-5.5 h-5.5 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              -
-                            </button>
-                            <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-50 px-1 min-w-[12px] text-center">
-                              {cartQuantity}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => onUpdateQuantity(product.id, cartQuantity + 1)}
-                              className="w-5.5 h-5.5 rounded-md bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
-                            >
-                              +
-                            </button>
-                          </div>
-                        )
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onAddToCart(product, 1)
-                            addToast(t('added_to_cart_toast', { name: product.name, quantity: 1 }), 'success')
-                          }}
-                          className="w-7 h-7 bg-[#6941c6] hover:bg-[#5b37ad] text-white rounded-lg transition-all shadow-sm hover:shadow flex items-center justify-center cursor-pointer animate-btn-in"
-                          title={t('add_to_cart')}
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
+                  <div className="flex items-center gap-0.5 flex-shrink-0 mt-0.5">
+                    <span className="text-xs font-semibold text-[#6941c6] dark:text-purple-400">₹</span>
+                    <span className="text-xs font-bold text-zinc-950 dark:text-zinc-50">
+                      {Number(product.price).toFixed(2)}
+                    </span>
                   </div>
                 </div>
               </div>
