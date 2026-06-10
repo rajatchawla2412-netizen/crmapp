@@ -75,7 +75,7 @@ function CategoryImage({ src, name }) {
 
   if (!imageSrc || hasError) {
     return (
-      <div className="w-full h-full bg-zinc-100 dark:bg-zinc-850 flex items-center justify-center text-zinc-400 dark:text-zinc-500 font-bold text-xl select-none">
+      <div className="w-12 h-12 rounded-full bg-white/40 dark:bg-black/25 flex items-center justify-center font-black text-xs select-none backdrop-blur-sm">
         {getInitials(name)}
       </div>
     )
@@ -86,9 +86,32 @@ function CategoryImage({ src, name }) {
       src={imageSrc}
       alt={name}
       onError={() => setHasError(true)}
-      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+      className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
     />
   )
+}
+
+function getCategoryTheme(id, name) {
+  const identifier = name || String(id || '');
+  let hash = 0;
+  for (let i = 0; i < identifier.length; i++) {
+    hash = identifier.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  return {
+    light: {
+      bg: `hsl(${hue}, 80%, 96%)`,
+      text: `hsl(${hue}, 85%, 22%)`,
+      subtext: `hsl(${hue}, 70%, 35%)`,
+      border: `hsl(${hue}, 65%, 90%)`
+    },
+    dark: {
+      bg: `hsl(${hue}, 45%, 11%)`,
+      text: `hsl(${hue}, 80%, 80%)`,
+      subtext: `hsl(${hue}, 70%, 65%)`,
+      border: `hsl(${hue}, 35%, 17%)`
+    }
+  };
 }
 
 export default function CategoriesPage({ user, onLogout }) {
@@ -243,16 +266,17 @@ export default function CategoriesPage({ user, onLogout }) {
 
       {/* Loading Skeletons */}
       {isLoading && (
-        <section className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-          {Array.from({ length: 8 }).map((_, i) => (
+        <section className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
+          {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={`skeleton-${i}`}
-              className="relative aspect-square bg-zinc-150/40 dark:bg-zinc-900/15 border border-zinc-200/50 dark:border-zinc-800/50 rounded-3xl animate-pulse overflow-hidden"
+              className="h-24 bg-zinc-150/40 dark:bg-zinc-900/15 border border-zinc-200/50 dark:border-zinc-800/50 rounded-2xl animate-pulse overflow-hidden flex items-center justify-between p-3.5 sm:p-5"
             >
-              <div className="w-full h-full bg-zinc-200/50 dark:bg-zinc-800/40"></div>
-              <div className="absolute bottom-0 left-0 right-0 h-12 bg-white/60 dark:bg-zinc-950/60 border-t border-zinc-200/30 dark:border-zinc-800/30 flex items-center justify-center px-4">
-                <div className="h-3.5 bg-zinc-200 dark:bg-zinc-800 rounded w-2/3"></div>
+              <div className="space-y-2 flex-1 pr-2">
+                <div className="h-3.5 bg-zinc-200/80 dark:bg-zinc-800/60 rounded w-4/5"></div>
+                <div className="h-2.5 bg-zinc-200/60 dark:bg-zinc-800/40 rounded w-1/2"></div>
               </div>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 bg-zinc-200/50 dark:bg-zinc-850/50 rounded-xl flex-shrink-0"></div>
             </div>
           ))}
         </section>
@@ -260,28 +284,68 @@ export default function CategoriesPage({ user, onLogout }) {
 
       {/* Categories Grid  */}
       {!isLoading && categories.length > 0 && (
-        <section className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-          {categories.map(category => (
-            <div
-              key={category.id}
-              onClick={() => {
-                navigate(`/products/${category.id}`, { state: { category } })
-              }}
-              className="relative aspect-square rounded-3xl overflow-hidden border-zinc-900 dark:border-zinc-900 shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.99] hover:border-purple-400 dark:hover:border-purple-700 transition-all duration-300 group cursor-pointer select-none"
-            >
-              {/* Category Image - Fills the card */}
-              <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                <CategoryImage src={category.image} name={category.name} />
-              </div>
+        <section className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
+          <style>{`
+            .category-card {
+              background-color: var(--cat-bg-light);
+              color: var(--cat-text-light);
+              border-color: var(--cat-border-light);
+            }
+            .dark .category-card {
+              background-color: var(--cat-bg-dark);
+              color: var(--cat-text-dark);
+              border-color: var(--cat-border-dark);
+            }
+            .category-card-title {
+              color: var(--cat-text-light);
+            }
+            .dark .category-card-title {
+              color: var(--cat-text-dark);
+            }
+            .category-card-subtext {
+              color: var(--cat-subtext-light);
+            }
+            .dark .category-card-subtext {
+              color: var(--cat-subtext-dark);
+            }
+          `}</style>
+          {categories.map((category) => {
+            const theme = getCategoryTheme(category.id, category.name)
+            return (
+              <div
+                key={category.id}
+                onClick={() => {
+                  navigate(`/products/${category.id}`, { state: { category } })
+                }}
+                className="category-card flex items-center justify-between p-3.5 sm:p-5 rounded-2xl border hover:scale-[1.02] active:scale-[0.99] transition-all duration-300 group cursor-pointer select-none h-24 shadow-sm"
+                style={{
+                  '--cat-bg-light': theme.light.bg,
+                  '--cat-bg-dark': theme.dark.bg,
+                  '--cat-text-light': theme.light.text,
+                  '--cat-text-dark': theme.dark.text,
+                  '--cat-subtext-light': theme.light.subtext,
+                  '--cat-subtext-dark': theme.dark.subtext,
+                  '--cat-border-light': theme.light.border,
+                  '--cat-border-dark': theme.dark.border,
+                }}
+              >
+                {/* Category Name on the Left */}
+                <div className="flex-1 pr-1.5 sm:pr-4 text-left">
+                  <h3 className="category-card-title font-extrabold text-sm sm:text-base md:text-lg tracking-tight leading-tight line-clamp-2">
+                    {category.name || category.display_name}
+                  </h3>
+                  <p className="category-card-subtext text-[9px] sm:text-[11px] font-semibold mt-0.5 sm:mt-1">
+                    {t('browse_products') || 'Browse Products'}
+                  </p>
+                </div>
 
-              {/* Category Title - Overlay at the bottom */}
-              <div className="absolute bottom-0 left-0 right-0 bg-white/75 dark:bg-zinc-950/75 backdrop-blur-md border-t border-zinc-300 dark:border-zinc-750 py-2.5 px-3 flex items-center justify-center text-center">
-                <h3 className="font-bold text-sm text-zinc-900 dark:text-zinc-100 truncate w-full">
-                  {category.name || category.display_name}
-                </h3>
+                {/* Transparent Image on the Right */}
+                <div className="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                  <CategoryImage src={category.image} name={category.name} />
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </section>
       )}
 

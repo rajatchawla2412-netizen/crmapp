@@ -100,7 +100,8 @@ const resources = {
       connection_success: "Server connected successfully!",
       connection_error: "Connection failed. Check URL.",
       reset_logout_btn: "Reset & Full Logout",
-      reset_logout_confirm: "Are you sure you want to log out fully? This will clear all saved server configuration and databases."
+      reset_logout_confirm: "Are you sure you want to log out fully? This will clear all saved server configuration and databases.",
+      loading: "Loading..."
     }
   },
   gu: {
@@ -202,7 +203,8 @@ const resources = {
       connection_success: "સર્વર સફળતાપૂર્વક કનેક્ટ થયું!",
       connection_error: "કનેક્શન નિષ્ફળ ગયું. URL તપાસો.",
       reset_logout_btn: "રીસેટ અને પૂર્ણ લોગઆઉટ",
-      reset_logout_confirm: "શું તમે ખરેખર સંપૂર્ણ લોગઆઉટ કરવા માંગો છો? આ તમામ સેવ કરેલ સર્વર કન્ફિગરેશન અને ડેટાબેઝને ભૂંસી નાખશે."
+      reset_logout_confirm: "શું તમે ખરેખર સંપૂર્ણ લોગઆઉટ કરવા માંગો છો? આ તમામ સેવ કરેલ સર્વર કન્ફિગરેશન અને ડેટાબેઝને ભૂંસી નાખશે.",
+      loading: "લોડ થઈ રહ્યું છે..."
     }
   }
 };

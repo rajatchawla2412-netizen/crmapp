@@ -147,27 +147,22 @@ export default function LandingPage({
   )
 
   return (
-    <div className="fixed inset-0 bg-zinc-950 flex flex-col overflow-hidden transition-colors duration-300">
+    <div className="fixed inset-0 bg-zinc-50 dark:bg-zinc-950 flex flex-col overflow-hidden transition-colors duration-300">
       
       {/* Background Blur Blobs */}
-      <div className="absolute top-[10%] left-[10%] w-[450px] h-[450px] rounded-full bg-brand-600/10 dark:bg-brand-600/5 blur-[120px] pointer-events-none select-none"></div>
-      <div className="absolute bottom-[10%] right-[10%] w-[400px] h-[400px] rounded-full bg-indigo-500/10 dark:bg-indigo-500/5 blur-[120px] pointer-events-none select-none"></div>
+      <div className="absolute top-[10%] left-[10%] w-[450px] h-[450px] rounded-full bg-brand-red/10 dark:bg-brand-red/5 blur-[120px] pointer-events-none select-none"></div>
+      <div className="absolute bottom-[10%] right-[10%] w-[400px] h-[400px] rounded-full bg-brand-red/5 blur-[120px] pointer-events-none select-none"></div>
 
       {/* Main Container - Full height flexbox, overflow hidden */}
-      <div className="w-full h-full flex flex-col relative z-10 bg-white/40 dark:bg-zinc-950/20 backdrop-blur-md transition-colors duration-300 overflow-hidden">
+      <div className="w-full h-full flex flex-col relative z-10 bg-white/70 dark:bg-zinc-950/20 backdrop-blur-md transition-colors duration-300 overflow-hidden">
         
         {/* Header - Fixed to top, will not scroll */}
-        <header className="flex-shrink-0 z-40 w-full bg-white/30 dark:bg-zinc-950/30 backdrop-blur-md border-b border-zinc-200/30 dark:border-zinc-800/35 px-4 md:px-6 py-4 flex items-center justify-between transition-colors duration-300">
+        <header className="flex-shrink-0 z-40 w-full bg-white/80 dark:bg-zinc-950/60 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800/50 px-4 md:px-6 py-4 flex items-center justify-between transition-colors duration-300">
           <div className="flex items-center gap-6">
             {/* Branding Logo */}
-            <div className="flex items-center gap-2.5 cursor-pointer select-none" onClick={() => navigate('/')}>
-              <svg className="w-7 h-7" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="8" y="8" width="34" height="34" rx="10" fill="#3A6DFF" />
-                <rect x="22" y="22" width="34" height="34" rx="10" fill="#4B6BFB" />
-                <rect x="21" y="21" width="22" height="22" rx="6" fill="#FFFFFF" />
-              </svg>
-              <span className="font-bold text-base tracking-tight bg-gradient-to-r from-zinc-900 to-zinc-600 dark:from-zinc-100 dark:to-zinc-400 bg-clip-text text-transparent">
-                crmapp
+            <div className="flex items-center gap-1.5 cursor-pointer select-none" onClick={() => navigate('/')}>
+              <span className="font-extrabold text-xl tracking-tight text-brand-red uppercase">
+                CRMAPP
               </span>
             </div>
 
@@ -176,7 +171,7 @@ export default function LandingPage({
               <button
                 onClick={() => navigate('/')}
                 className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${isHomeActive
-                  ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-950/20'
+                  ? 'text-brand-red bg-brand-red/10'
                   : 'text-zinc-650 hover:text-zinc-900 dark:text-zinc-100 dark:hover:text-zinc-100'
                   }`}
               >
@@ -186,13 +181,13 @@ export default function LandingPage({
               <button
                 onClick={() => navigate('/cart')}
                 className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 cursor-pointer relative ${isCartActive
-                  ? 'text-brand-600 dark:text-brand-400 bg-brand-50/50 dark:bg-brand-950/20'
+                  ? 'text-brand-red bg-brand-red/10'
                   : 'text-zinc-650 hover:text-zinc-900 dark:text-zinc-100 dark:hover:text-zinc-100'
                   }`}
               >
                 <span>{t('cart') || 'Cart'}</span>
                 {totalCartQty > 0 && (
-                  <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-[#6941c6] text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
+                  <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-brand-red text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
                     {totalCartQty}
                   </span>
                 )}
@@ -201,18 +196,33 @@ export default function LandingPage({
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Language Switch Button */}
+            {/* Language Toggle Button */}
             <button
               type="button"
               disabled={isContentLoading || isLanguageUpdating}
               onClick={handleLanguageSwitch}
-              className="px-3.5 py-1.5 bg-brand-50/50 hover:bg-brand-50 dark:bg-brand-950/20 dark:hover:bg-brand-950/40 border border-brand-200/50 dark:border-brand-900/30 rounded-full text-xs font-semibold text-brand-600 dark:text-brand-400 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="h-9 p-1 bg-zinc-100 dark:bg-zinc-900 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-800 rounded-full flex items-center gap-2 text-zinc-700 dark:text-zinc-300 text-xs font-semibold cursor-pointer select-none transition-all duration-300 disabled:opacity-50"
               title={t('preferred_language')}
             >
-              <svg className="w-4 h-4 text-zinc-450 dark:text-zinc-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-.554-8.243-1.548m16.5 0a8.997 8.997 0 01-1.863 5.06M3.91 9c.18-.287.375-.56.586-.816m-.586.816A9.004 9.004 0 003 12c0 2.083.704 3.999 1.884 5.517m0 0a8.997 8.997 0 007.843 4.582M12 3c.132 0 .263.003.394.01M12 3c-.132 0-.263.003-.394.01"></path>
-              </svg>
-              <span>{i18n.language === 'en' ? 'ગુજરાતી' : 'English'}</span>
+              {i18n.language === 'en' ? (
+                <>
+                  {/* Circle 'en' on the left */}
+                  <span className="w-7 h-7 rounded-full bg-white text-brand-red flex items-center justify-center font-extrabold text-[10px] uppercase shadow-sm">
+                    en
+                  </span>
+                  {/* Label 'English' on the right */}
+                  <span className="pr-2.5">English</span>
+                </>
+              ) : (
+                <>
+                  {/* Label 'ગુજરાતી' on the left */}
+                  <span className="pl-2.5">ગુજરાતી</span>
+                  {/* Circle 'ગુ' on the right */}
+                  <span className="w-7 h-7 rounded-full bg-white text-brand-red flex items-center justify-center font-extrabold text-[10px] shadow-sm">
+                    ગુ
+                  </span>
+                </>
+              )}
             </button>
 
             {/* Desktop User Profile Dropdown */}
@@ -328,53 +338,57 @@ export default function LandingPage({
         {mainContent}
 
         {/* Bottom Tab Bar (Visible on Mobile only, hidden on Desktop) */}
-        <nav className="flex-shrink-0 md:hidden bg-white/30 dark:bg-zinc-950/30 backdrop-blur-md border-t border-zinc-200/30 dark:border-zinc-800/35 pb-safe-bottom">
-          <div className="flex items-center justify-around py-3 px-4">
+        <nav className="flex-shrink-0 md:hidden bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 pb-safe-bottom z-30 transition-colors duration-300">
+          <div className="w-full max-w-sm mx-auto flex items-center justify-between py-2.5 px-4">
+
             {/* Home Tab */}
             <button
               onClick={() => navigate('/')}
-              className={`flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 active:scale-95 ${isHomeActive
-                ? 'text-brand-600 dark:text-brand-400 font-bold scale-105'
-                : 'text-zinc-400 hover:text-zinc-550 dark:hover:text-zinc-350'
+              className={`w-[33.33%] flex flex-col items-center gap-1.5 py-1 cursor-pointer transition-all duration-200 ${isHomeActive
+                ? 'text-brand-red dark:text-purple-400 scale-105'
+                : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
                 }`}
             >
-              <svg className="w-5.5 h-5.5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <svg className="w-5.5 h-5.5 transition-all duration-200" fill="none" stroke="currentColor" strokeWidth={isHomeActive ? "2.6" : "2"} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
               </svg>
-              <span className="text-[10px] tracking-wide">{t('home') || 'Home'}</span>
+              <span className={`text-[10px] tracking-wide leading-none transition-all duration-200 ${isHomeActive ? 'font-bold' : 'font-medium'}`}>{t('home') || 'Home'}</span>
+              <span className={`w-1 h-1 rounded-full bg-brand-red dark:bg-purple-400 transition-all duration-200 mt-0.5 ${isHomeActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`} />
             </button>
 
             {/* Cart Tab */}
             <button
               onClick={() => navigate('/cart')}
-              className={`relative flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 active:scale-95 ${isCartActive
-                ? 'text-brand-600 dark:text-brand-400 font-bold scale-105'
-                : 'text-zinc-400 hover:text-zinc-555 dark:hover:text-zinc-350'
+              className={`w-[33.33%] flex flex-col items-center gap-1.5 py-1 cursor-pointer transition-all duration-200 relative ${isCartActive
+                ? 'text-brand-red dark:text-purple-400 scale-105'
+                : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
                 }`}
             >
-              <svg className="w-5.5 h-5.5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <svg className="w-5.5 h-5.5 transition-all duration-200" fill="none" stroke="currentColor" strokeWidth={isCartActive ? "2.6" : "2"} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
               </svg>
               {totalCartQty > 0 && (
-                <span className="absolute -top-1.5 right-1 min-w-[17px] h-[17px] px-1 rounded-full bg-[#6941c6] text-white text-[8px] font-bold flex items-center justify-center shadow-sm animate-pulse">
+                <span className="absolute -top-1 right-5 min-w-[15px] h-[15px] px-1 rounded-full bg-brand-red text-white text-[8px] font-extrabold flex items-center justify-center shadow-sm border border-white dark:border-zinc-950 animate-pulse z-20">
                   {totalCartQty}
                 </span>
               )}
-              <span className="text-[10px] tracking-wide">{t('cart') || 'Cart'}</span>
+              <span className={`text-[10px] tracking-wide leading-none transition-all duration-200 ${isCartActive ? 'font-bold' : 'font-medium'}`}>{t('cart') || 'Cart'}</span>
+              <span className={`w-1 h-1 rounded-full bg-brand-red dark:bg-purple-400 transition-all duration-200 mt-0.5 ${isCartActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`} />
             </button>
 
             {/* User Tab */}
             <button
               onClick={() => navigate('/user')}
-              className={`flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 active:scale-95 ${isUserActive
-                ? 'text-brand-600 dark:text-brand-400 font-bold scale-105'
-                : 'text-zinc-400 hover:text-zinc-555 dark:hover:text-zinc-350'
+              className={`w-[33.33%] flex flex-col items-center gap-1.5 py-1 cursor-pointer transition-all duration-200 ${isUserActive
+                ? 'text-brand-red dark:text-purple-400 scale-105'
+                : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
                 }`}
             >
-              <svg className="w-5.5 h-5.5" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <svg className="w-5.5 h-5.5 transition-all duration-200" fill="none" stroke="currentColor" strokeWidth={isUserActive ? "2.6" : "2"} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
               </svg>
-              <span className="text-[10px] tracking-wide">{t('profile') || 'User'}</span>
+              <span className={`text-[10px] tracking-wide leading-none transition-all duration-200 ${isUserActive ? 'font-bold' : 'font-medium'}`}>{t('profile') || 'User'}</span>
+              <span className={`w-1 h-1 rounded-full bg-brand-red dark:bg-purple-400 transition-all duration-200 mt-0.5 ${isUserActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`} />
             </button>
           </div>
         </nav>
