@@ -1,3 +1,5 @@
+import { customFetch } from './api'
+
 /**
  * Calculates the driving distance between two points using the OpenRouteService Matrix API.
  * 
@@ -32,7 +34,7 @@ export async function calculateDrivingDistance(startPoint, endPoint) {
   };
 
   try {
-    const response = await fetch(url, {
+    const response = await customFetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

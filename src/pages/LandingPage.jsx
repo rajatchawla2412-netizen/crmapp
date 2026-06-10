@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { getApiBaseUrl } from '../utils/api'
+import { getApiBaseUrl, customFetch } from '../utils/api'
 
 export default function LandingPage({
   user,
@@ -80,7 +80,7 @@ export default function LandingPage({
 
       const API_BASE = getApiBaseUrl()
 
-      await fetch(`${API_BASE}/edit_profile`, {
+      await customFetch(`${API_BASE}/edit_profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

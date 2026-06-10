@@ -3,7 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import PullToRefresh from 'react-simple-pull-to-refresh'
-import { getApiBaseUrl } from '../utils/api'
+import { getApiBaseUrl, customFetch } from '../utils/api'
 
 // Minimalist Pull to Refresh components
 const PullingIndicator = () => (
@@ -123,7 +123,7 @@ export default function CategoriesPage({ user, onLogout }) {
 
       const categoriesUrl = `${API_BASE}/category_list`
       // Always fetch in English first to ensure image data is loaded
-      const catResponse = await fetch(categoriesUrl, {
+      const catResponse = await customFetch(categoriesUrl, {
         method: 'GET',
         headers: {
           'login': login,
@@ -153,7 +153,7 @@ export default function CategoriesPage({ user, onLogout }) {
       // If the app language is Gujarati, fetch the translation for names and merge them
       if (i18n.language === 'gu') {
         try {
-          const guResponse = await fetch(categoriesUrl, {
+          const guResponse = await customFetch(categoriesUrl, {
             method: 'GET',
             headers: {
               'login': login,

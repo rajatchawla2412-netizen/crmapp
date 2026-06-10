@@ -3,7 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import PullToRefresh from 'react-simple-pull-to-refresh'
-import { getApiBaseUrl } from '../utils/api'
+import { getApiBaseUrl, customFetch } from '../utils/api'
 
 // Minimalist Pull to Refresh components
 const PullingIndicator = () => (
@@ -147,7 +147,7 @@ export default function OrdersPage({ user, onLogout }) {
       const API_BASE = getApiBaseUrl()
 
       const url = `${API_BASE}/order_list`
-      const response = await fetch(url, {
+      const response = await customFetch(url, {
         method: 'GET',
         headers: {
           'login': login,
@@ -214,7 +214,7 @@ export default function OrdersPage({ user, onLogout }) {
       const API_BASE = getApiBaseUrl()
 
       const url = `${API_BASE}/cancel_order`
-      const response = await fetch(url, {
+      const response = await customFetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

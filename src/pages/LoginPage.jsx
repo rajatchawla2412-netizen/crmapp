@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
+import { customFetch } from '../utils/api'
 
 function CustomSelect({ label, value, onChange, options, disabled, placeholder }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -94,7 +95,7 @@ export default function LoginPage({ onLoginSuccess }) {
   const [password, setPassword] = useState('')
 
   // Dynamic API & DB Configuration States
-  const defaultApiUrl = import.meta.env.VITE_API_BASE_URL || 'http://192.168.29.191:8099'
+  const defaultApiUrl = import.meta.env.VITE_API_BASE_URL
   const defaultScheme = defaultApiUrl.startsWith('https') ? 'https' : 'http'
   const defaultHost = defaultApiUrl.replace(/^(https?:\/\/)/, '').replace(/\/+$/, '')
 
@@ -137,7 +138,7 @@ export default function LoginPage({ onLoginSuccess }) {
           fetchUrl = '/api/web/database/list'
         }
 
-        const response = await fetch(fetchUrl, {
+        const response = await customFetch(fetchUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -204,7 +205,7 @@ export default function LoginPage({ onLoginSuccess }) {
         API_URL = '/api/odoo_connect'
       }
 
-      const response = await fetch(API_URL, {
+      const response = await customFetch(API_URL, {
         method: 'GET',
         headers: {
           'db': selectedDb.trim(),
@@ -347,7 +348,7 @@ export default function LoginPage({ onLoginSuccess }) {
           {!hasSavedConfig && (
             <div className="bg-white/10 dark:bg-zinc-950/15 border border-zinc-200/40 dark:border-zinc-800/40 rounded-2xl p-5 space-y-5 mb-6 text-left transition-all duration-300 backdrop-blur-xs">
               <div className="flex items-center gap-2 pb-3 border-b border-zinc-200/30 dark:border-zinc-850/40 mb-1 select-none">
-                <svg className="w-4 h-4 text-brand-500 dark:text-brand-500" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-brand-500 dark:text-brand-500 dark:text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3V7.5a3 3 0 013-3h13.5a3 3 0 013 3v3.75a3 3 0 01-3 3zm-13.5 0a3 3 0 00-3 3v3.75a3 3 0 003 3h13.5a3 3 0 003-3v-3.75a3 3 0 00-3-3M6 7.5h.008v.008H6V7.5zM6 18h.008v.008H6V18z" />
                 </svg>
                 <h3 className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">

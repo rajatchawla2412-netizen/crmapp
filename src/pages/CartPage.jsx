@@ -3,7 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import { calculateDrivingDistance } from '../utils/distanceService'
-import { getApiBaseUrl } from '../utils/api'
+import { getApiBaseUrl, customFetch } from '../utils/api'
 
 const isShippingProduct = (item) => {
   if (!item) return false;
@@ -133,7 +133,7 @@ export default function CartPage({
       try {
         const lang = i18n.language === 'gu' ? 'gu' : 'en'
         const addressUrl = `${API_BASE}/address_details?partner_id=${partnerId}`
-        const addressResponse = await fetch(addressUrl, {
+        const addressResponse = await customFetch(addressUrl, {
           method: 'GET',
           headers: {
             'login': login,
@@ -195,7 +195,7 @@ export default function CartPage({
       const seconds = String(now.getSeconds()).padStart(2, '0')
       const dateOrder = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
 
-      const response = await fetch(API_URL, {
+      const response = await customFetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

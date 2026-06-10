@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Capacitor } from '@capacitor/core'
-import { getApiBaseUrl } from '../utils/api'
+import { getApiBaseUrl, customFetch } from '../utils/api'
 
 export default function Navbar({ 
   user, 
@@ -60,7 +60,7 @@ export default function Navbar({
 
       const API_BASE = getApiBaseUrl()
 
-      await fetch(`${API_BASE}/edit_profile`, {
+      await customFetch(`${API_BASE}/edit_profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

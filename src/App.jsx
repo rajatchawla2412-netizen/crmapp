@@ -9,7 +9,7 @@ import ProductsPage from './pages/ProductsPage'
 import CartPage from './pages/CartPage'
 import OrdersPage from './pages/OrdersPage'
 import UserPage from './pages/UserPage'
-import { getApiBaseUrl } from './utils/api'
+import { getApiBaseUrl, customFetch } from './utils/api'
 import './App.css'
 
 function AndroidBackButtonHandler() {
@@ -166,7 +166,7 @@ function App() {
       delete_line_ids
     }
 
-    const response = await fetch(url, {
+    const response = await customFetch(url, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation, useOutletContext } from 'react-rou
 import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import PullToRefresh from 'react-simple-pull-to-refresh'
-import { getApiBaseUrl } from '../utils/api'
+import { getApiBaseUrl, customFetch } from '../utils/api'
 
 const isShippingProduct = (item) => {
   if (!item) return false;
@@ -137,7 +137,7 @@ export default function ProductsPage({
         const API_BASE = getApiBaseUrl()
 
         const url = `${API_BASE}/category_list`
-        const response = await fetch(url, {
+        const response = await customFetch(url, {
           method: 'GET',
           headers: {
             'login': login,
@@ -207,7 +207,7 @@ export default function ProductsPage({
 
       const url = `${API_BASE}/category_products?model=product.category&categ_id=${categId}`
 
-      const response = await fetch(url, {
+      const response = await customFetch(url, {
         method: 'GET',
         headers: {
           'login': login,
