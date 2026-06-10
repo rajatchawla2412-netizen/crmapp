@@ -101,7 +101,10 @@ const resources = {
       connection_error: "Connection failed. Check URL.",
       reset_logout_btn: "Reset & Full Logout",
       reset_logout_confirm: "Are you sure you want to log out fully? This will clear all saved server configuration and databases.",
-      loading: "Loading..."
+      loading: "Loading...",
+      total_taxable_amount: "Total Taxable Amount",
+      total_tax_amount: "Total Tax Amount",
+      total_price_incl_tax: "Total Price (Incl. Tax)"
     }
   },
   gu: {
@@ -204,7 +207,11 @@ const resources = {
       connection_error: "કનેક્શન નિષ્ફળ ગયું. URL તપાસો.",
       reset_logout_btn: "રીસેટ અને પૂર્ણ લોગઆઉટ",
       reset_logout_confirm: "શું તમે ખરેખર સંપૂર્ણ લોગઆઉટ કરવા માંગો છો? આ તમામ સેવ કરેલ સર્વર કન્ફિગરેશન અને ડેટાબેઝને ભૂંસી નાખશે.",
-      loading: "લોડ થઈ રહ્યું છે..."
+      loading: "લોડ થઈ રહ્યું છે...",
+      total_taxable_amount: "કુલ કરપાત્ર રકમ",
+      total_tax_amount: "કુલ કર રકમ",
+      total_price_incl_tax: "કુલ કિંમત (ટેક્સ સહિત)"
+
     }
   }
 };

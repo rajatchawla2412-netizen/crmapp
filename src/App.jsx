@@ -10,6 +10,7 @@ import CartPage from './pages/CartPage'
 import OrdersPage from './pages/OrdersPage'
 import UserPage from './pages/UserPage'
 import { getApiBaseUrl, customFetch } from './utils/api'
+import { parsePrice } from './utils/priceTranslator'
 import './App.css'
 
 function AndroidBackButtonHandler() {
@@ -107,7 +108,7 @@ function App() {
         lineId: line.id,
         name: line.product_name,
         display_name: displayName,
-        price: line.price_unit,
+        price: parsePrice(line.price_unit),
         quantity: line.qty,
         category: line.uom || 'Units',
         image: line.image,
@@ -145,7 +146,7 @@ function App() {
         return {
           line_id: item.lineId,
           product_uom_qty: Number(item.quantity),
-          price_unit: Number(item.price),
+          price_unit: parsePrice(item.price),
           product_uom_id: 1
         }
       } else {
@@ -153,7 +154,7 @@ function App() {
         return {
           product_id: Number(item.id),
           product_uom_qty: Number(item.quantity),
-          price_unit: Number(item.price),
+          price_unit: parsePrice(item.price),
           product_uom_id: 1
         }
       }

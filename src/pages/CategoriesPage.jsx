@@ -239,7 +239,7 @@ export default function CategoriesPage({ user, onLogout }) {
   }
 
   const categoriesContent = (
-    <div className="space-y-8 text-left">
+    <div className="space-y-8 text-left animate-slide-in-left">
       {/* Welcome Title (Flat text, no border) */}
       <section className="relative transition-all duration-300">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -314,6 +314,7 @@ export default function CategoriesPage({ user, onLogout }) {
             return (
               <div
                 key={category.id}
+                id={`category-card-${category.id}`}
                 onClick={() => {
                   navigate(`/products/${category.id}`, { state: { category } })
                 }}

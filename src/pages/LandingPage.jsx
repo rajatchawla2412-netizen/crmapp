@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getApiBaseUrl, customFetch } from '../utils/api'
 
+
 export default function LandingPage({
   user,
   onLogout,
@@ -64,6 +65,8 @@ export default function LandingPage({
       return { ...prev, [key]: isLoading }
     })
   }, [])
+
+
   const isContentLoading = Object.values(loadingMap).some(Boolean)
 
   const handleLanguageSwitch = async () => {
@@ -472,9 +475,7 @@ export default function LandingPage({
             </div>
           </div>
         </div>
-      )}
-
-      <style>{`
+      )}      <style>{`
         @keyframes toastSlideIn {
           from {
             transform: translateY(1rem);

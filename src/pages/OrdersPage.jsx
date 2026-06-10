@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import PullToRefresh from 'react-simple-pull-to-refresh'
 import { getApiBaseUrl, customFetch } from '../utils/api'
+import { formatPrice } from '../utils/priceTranslator'
 
 // Minimalist Pull to Refresh components
 const PullingIndicator = () => (
@@ -393,14 +394,14 @@ export default function OrdersPage({ user, onLogout }) {
                               {(line.display_name || line.product_name || '').replace(/\[[^\]]*\]/g, '')}
                             </h5>
                             <p className="text-[10px] text-zinc-450 dark:text-zinc-500 mt-0.5">
-                              {line.qty} {line.uom || 'Units'} &times; ₹{Number(line.price_unit).toFixed(2)}
+                              {line.qty} {line.uom || 'Units'} &times; {formatPrice(line.price_unit, i18n.language)}
                             </p>
                           </div>
                         </div>
 
                         <div className="text-right min-w-[70px]">
                           <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-50">
-                            ₹{Number(line.subtotal).toFixed(2)}
+                            {formatPrice(line.subtotal, i18n.language)}
                           </span>
                         </div>
                       </div>
@@ -413,17 +414,17 @@ export default function OrdersPage({ user, onLogout }) {
               <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800 flex flex-col gap-2.5">
                 {order.amount_untaxed !== undefined && (
                   <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
-                    <span>{t('taxable_amount', { defaultValue: 'Taxable Amount' })}</span>
+                    <span>{t('total_taxable_amount', { defaultValue: 'Taxable Amount' })}</span>
                     <span className="font-semibold text-zinc-900 dark:text-zinc-50">
-                      ₹{Number(order.amount_untaxed).toFixed(2)}
+                      {formatPrice(order.amount_untaxed, i18n.language)}
                     </span>
                   </div>
                 )}
                 {order.amount_tax !== undefined && (
                   <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
-                    <span>{t('tax_amount', { defaultValue: 'Tax' })}</span>
+                    <span>{t('total_tax_amount', { defaultValue: 'Tax' })}</span>
                     <span className="font-semibold text-zinc-900 dark:text-zinc-50">
-                      ₹{Number(order.amount_tax).toFixed(2)}
+                      {formatPrice(order.amount_tax, i18n.language)}
                     </span>
                   </div>
                 )}
@@ -432,7 +433,7 @@ export default function OrdersPage({ user, onLogout }) {
                     {t('total_price_incl_tax', { defaultValue: 'Total (Incl. Tax)' })}
                   </span>
                   <span className="font-extrabold text-[#6941c6] dark:text-purple-400 text-sm">
-                    ₹{Number(order.amount_total).toFixed(2)}
+                    {formatPrice(order.amount_total, i18n.language)}
                   </span>
                 </div>
 

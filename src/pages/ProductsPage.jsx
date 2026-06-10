@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import PullToRefresh from 'react-simple-pull-to-refresh'
 import { getApiBaseUrl, customFetch } from '../utils/api'
+import { parsePrice, formatPrice } from '../utils/priceTranslator'
 
 const isShippingProduct = (item) => {
   if (!item) return false;
@@ -22,7 +23,7 @@ const PullingIndicator = () => (
 
 const RefreshingIndicator = () => (
   <div className="flex items-center justify-center py-4">
-    <div className="w-6 h-6 border-2 border-zinc-300 dark:border-zinc-700 border-t-purple-650 dark:border-t-purple-400 rounded-full animate-spin"></div>
+    <div className="w-6 h-6 border-2 border-zinc-300 dark:border-zinc-700 border-t-brand-red dark:border-t-purple-400 rounded-full animate-spin"></div>
   </div>
 )
 
@@ -110,6 +111,7 @@ export default function ProductsPage({
   const navigate = useNavigate()
   const location = useLocation()
   const { addToast, setPageLoading, editingOrder, isLanguageUpdating } = useOutletContext()
+  const [isBackNavigating, setIsBackNavigating] = useState(false)
 
   // Retrieve category info from state or reconstruct a simple fallback
 
@@ -251,7 +253,7 @@ export default function ProductsPage({
           id: record.id,
           name: record.name,
           display_name: record.display_name.replace(/\[[^\]]*\]/g, ''),
-          price: record.list_price !== undefined ? record.list_price : 0,
+          price: record.list_price !== undefined ? parsePrice(record.list_price) : 0,
           categoryId: categoryId,
           category: categoryName,
           image: record.image,
@@ -285,13 +287,19 @@ export default function ProductsPage({
   }
 
   const productsContent = (
-    <div className="space-y-6 text-left">
+    <div className={`space-y-6 text-left ${isBackNavigating ? 'animate-slide-out-right' : 'animate-slide-in-right'}`}>
       {/* Header */}
       <div className="flex items-center gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800">
         <button
           type="button"
-          onClick={() => navigate('/')}
-          className="p-2.5 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-450 hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+          disabled={isBackNavigating}
+          onClick={() => {
+            setIsBackNavigating(true)
+            setTimeout(() => {
+              navigate('/')
+            }, 300)
+          }}
+          className="p-2.5 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-455 hover:bg-zinc-50 dark:hover:bg-zinc-900 hover:text-brand-red dark:hover:text-purple-400 hover:border-brand-red/35 dark:hover:border-purple-550/30 rounded-xl transition-all cursor-pointer flex items-center justify-center disabled:opacity-50"
           title={t('back_to_categories')}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -340,7 +348,7 @@ export default function ProductsPage({
 
       {/* Products Grid list */}
       {!isLoading && products.length === 0 && !errorMsg && (
-        <div className="p-12 bg-zinc-50/50 dark:bg-zinc-900/20 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl text-center text-sm text-zinc-500 font-medium">
+        <div className="p-12 bg-zinc-50/50 dark:bg-zinc-900/20 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl text-center text-sm text-zinc-550 font-medium">
           {t('category_empty')}
         </div>
       )}
@@ -354,7 +362,7 @@ export default function ProductsPage({
             return (
               <div
                 key={product.id}
-                className="bg-zinc-50/60 dark:bg-zinc-900/20 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col hover:border-purple-800 dark:hover:border-purple-800 transition-all duration-300 relative text-left"
+                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col hover:border-brand-red dark:hover:border-brand-red/50 hover:shadow-md transition-all duration-300 relative text-left"
               >
                 {/* Product Image section */}
                 <div className="relative w-full aspect-square flex items-center justify-center rounded-xl overflow-hidden flex-shrink-0">
@@ -364,7 +372,7 @@ export default function ProductsPage({
                   <div className="absolute bottom-2 right-2 z-10">
                     {cartQuantity > 0 ? (
                       editingOrder && isShippingProduct(product) ? (
-                        <div className="px-2.5 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 dark:text-zinc-400 shadow-md">
+                        <div className="px-2.5 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-semibold text-zinc-500 dark:text-zinc-455 shadow-md">
                           {t('qty_label', { defaultValue: 'Qty' })}: {cartQuantity}
                         </div>
                       ) : (
@@ -379,7 +387,7 @@ export default function ProductsPage({
                                 onUpdateQuantity(product.id, cartQuantity - 1)
                               }
                             }}
-                            className="w-8 h-8 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-8 h-8 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-brand-red dark:hover:text-purple-400 hover:border-brand-red/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             -
                           </button>
@@ -389,7 +397,7 @@ export default function ProductsPage({
                           <button
                             type="button"
                             onClick={() => onUpdateQuantity(product.id, cartQuantity + 1)}
-                            className="w-8 h-8 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+                            className="w-8 h-8 rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 flex items-center justify-center font-bold text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-brand-red dark:hover:text-purple-400 hover:border-brand-red/20 transition-all cursor-pointer"
                           >
                             +
                           </button>
@@ -402,7 +410,7 @@ export default function ProductsPage({
                           onAddToCart(product, 1)
                           addToast(t('added_to_cart_toast', { name: product.name, quantity: 1 }), 'success')
                         }}
-                        className="w-9 h-9 bg-[#6941c6] hover:bg-[#5b37ad] text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center cursor-pointer animate-btn-in"
+                        className="w-9 h-9 bg-brand-red hover:bg-brand-red-hover text-white rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center cursor-pointer animate-btn-in"
                         title={t('add_to_cart')}
                       >
                         <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -419,9 +427,8 @@ export default function ProductsPage({
                     {product.display_name}
                   </h4>
                   <div className="flex items-center gap-0.5 flex-shrink-0 mt-0.5">
-                    <span className="text-xs font-semibold text-[#6941c6] dark:text-purple-400">₹</span>
-                    <span className="text-xs font-bold text-zinc-950 dark:text-zinc-50">
-                      {Number(product.price).toFixed(2)}
+                    <span className="text-xs font-extrabold text-brand-red dark:text-purple-400">
+                      {formatPrice(product.price, i18n.language)}
                     </span>
                   </div>
                 </div>

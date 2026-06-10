@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
 import { calculateDrivingDistance } from '../utils/distanceService'
 import { getApiBaseUrl, customFetch } from '../utils/api'
+import { formatPrice, parsePrice } from '../utils/priceTranslator'
 
 const isShippingProduct = (item) => {
   if (!item) return false;
@@ -104,12 +105,12 @@ export default function CartPage({
 
   // Calculations
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
-  const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+  const totalPrice = cart.reduce((sum, item) => sum + (parsePrice(item.price) * item.quantity), 0)
   const totalTax = cart.reduce((sum, item) => {
     const percentage = item.taxes && item.taxes.length > 0
-      ? item.taxes.reduce((s, t) => s + (t.amount || 0), 0)
+      ? item.taxes.reduce((s, t) => s + parsePrice(t.amount || 0), 0)
       : 0;
-    return sum + ((item.price * item.quantity * percentage) / 100);
+    return sum + ((parsePrice(item.price) * item.quantity * percentage) / 100);
   }, 0)
   const totalWithTax = totalPrice + totalTax;
 
@@ -183,7 +184,7 @@ export default function CartPage({
       const orderLines = cart.map(item => ({
         product_id: Number(item.id),
         product_uom_qty: Number(item.quantity),
-        price_unit: Number(item.price)
+        price_unit: parsePrice(item.price)
       }))
 
       const now = new Date()
@@ -384,13 +385,12 @@ export default function CartPage({
                       <h4 className="font-semibold text-sm text-zinc-900 dark:text-zinc-50 leading-snug truncate" title={item.display_name || item.name}>
                         {item.display_name || item.name || ''}
                       </h4>
-                      {/* Tax Information */}
                       <div className="flex gap-3 mt-1 text-[10px] text-zinc-500 dark:text-zinc-400 font-medium">
                         <span>
                           {t('tax_label', { defaultValue: 'Tax' })}: {item.taxes && item.taxes.length > 0 ? item.taxes.map(t => t.name).join(', ') : '0%'}
                         </span>
                         <span>
-                          {t('taxable_label', { defaultValue: 'Taxable' })}: ₹ {(item.price * item.quantity).toFixed(2)}
+                          {t('taxable_label', { defaultValue: 'Taxable' })}: {formatPrice(parsePrice(item.price) * item.quantity, i18n.language)}
                         </span>
                       </div>
                     </div>
@@ -401,7 +401,7 @@ export default function CartPage({
                     <div className="text-left sm:text-right">
                       <p className="text-[10px] text-zinc-450 dark:text-zinc-500 font-medium">{t('price_label')}</p>
                       <p className="text-xs font-bold text-zinc-900 dark:text-zinc-50">
-                        ₹ {Number(item.price).toFixed(2)}
+                        {formatPrice(item.price, i18n.language)}
                       </p>
                     </div>
 
@@ -467,7 +467,7 @@ export default function CartPage({
                         <div className="text-right min-w-[70px]">
                           <p className="text-[10px] text-zinc-450 dark:text-zinc-500 font-medium">{t('subtotal_label')}</p>
                           <p className="text-xs font-extrabold text-[#6941c6] dark:text-purple-400">
-                            ₹ {Number(item.price * item.quantity).toFixed(2)}
+                            {formatPrice(parsePrice(item.price) * item.quantity, i18n.language)}
                           </p>
                         </div>
                       </div>
@@ -495,16 +495,16 @@ export default function CartPage({
               </div>
               <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400 text-xs pt-1">
                 <span>{t('total_taxable_amount', { defaultValue: 'Total Taxable Amount' })}</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-50">₹ {totalPrice.toFixed(2)}</span>
+                <span className="font-semibold text-zinc-900 dark:text-zinc-50">{formatPrice(totalPrice, i18n.language)}</span>
               </div>
               <div className="flex items-center justify-between text-zinc-500 dark:text-zinc-400 text-xs pt-1">
                 <span>{t('total_tax_amount', { defaultValue: 'Total Tax Amount' })}</span>
-                <span className="font-semibold text-zinc-900 dark:text-zinc-50">₹ {totalTax.toFixed(2)}</span>
+                <span className="font-semibold text-zinc-900 dark:text-zinc-50">{formatPrice(totalTax, i18n.language)}</span>
               </div>
               <div className="flex items-center justify-between text-sm pt-3 border-t border-zinc-200 dark:border-zinc-800">
                 <span className="font-semibold text-zinc-900 dark:text-zinc-50">{t('total_price_incl_tax', { defaultValue: 'Total Price (Incl. Tax)' })}</span>
                 <span className="font-extrabold text-[#6941c6] dark:text-purple-400 text-base">
-                  ₹ {totalWithTax.toFixed(2)}
+                  {formatPrice(totalWithTax, i18n.language)}
                 </span>
               </div>
 
