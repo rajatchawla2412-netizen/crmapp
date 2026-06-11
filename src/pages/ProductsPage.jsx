@@ -348,7 +348,7 @@ export default function ProductsPage({
 
       {/* Products Grid list */}
       {!isLoading && products.length === 0 && !errorMsg && (
-        <div className="p-12 bg-zinc-50/50 dark:bg-zinc-900/20 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl text-center text-sm text-zinc-550 font-medium">
+        <div className="p-12 bg-zinc-50/50 dark:bg-zinc-900/20 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl text-center text-sm text-zinc-550 dark:text-zinc-300 font-medium">
           {t('category_empty')}
         </div>
       )}

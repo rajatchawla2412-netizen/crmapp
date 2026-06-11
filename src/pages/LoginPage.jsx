@@ -79,6 +79,32 @@ const customStyles = `
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
+
+.server-settings-slide {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease, margin-bottom 0.5s ease;
+}
+
+.server-settings-slide.show {
+  max-height: 500px;
+  opacity: 1;
+  margin-bottom: 24px;
+}
+
+@keyframes rotateGear {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(90deg);
+  }
+}
+
+.hover-rotate-gear:hover svg {
+  animation: rotateGear 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 `;
 
 function Logo({ size = "medium" }) {
@@ -203,6 +229,7 @@ export default function LoginPage({ onLoginSuccess }) {
   })
   const [selectedDb, setSelectedDb] = useState(() => localStorage.getItem('server-db') || import.meta.env.VITE_DB_NAME || 'rest_api')
   const [connectionStatus, setConnectionStatus] = useState('idle') // 'idle', 'loading', 'success', 'error'
+  const [showServerSettings, setShowServerSettings] = useState(false)
 
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -293,10 +320,25 @@ export default function LoginPage({ onLoginSuccess }) {
 
   const hasSavedConfig = !!localStorage.getItem('server-url')
 
+  const savedScheme = localStorage.getItem('server-scheme')
+  const savedServerUrlRaw = localStorage.getItem('server-url-raw')
+  const savedDb = localStorage.getItem('server-db')
+
+  // Normalise raw URLs (e.g. strip protocol/trailing slashes) for comparison
+  const normalizeUrl = (url) => {
+    if (!url) return ''
+    return url.replace(/^(https?:\/\/)?/, '').replace(/\/+$/, '').trim()
+  }
+
+  const isSettingsModified = 
+    normalizeUrl(savedServerUrlRaw) !== normalizeUrl(serverUrl) ||
+    savedScheme !== scheme ||
+    savedDb !== selectedDb
+
+  const isConnectionValid = (!isSettingsModified && hasSavedConfig) || (connectionStatus === 'success' && selectedDb)
+
   const handleLogin = async (e) => {
     if (e) e.preventDefault()
-
-    const isConnectionValid = hasSavedConfig || (connectionStatus === 'success' && selectedDb)
     if (!username.trim() || !password.trim() || !isConnectionValid) {
       setMessage({ type: 'error', text: t('fill_fields') })
       return
@@ -447,37 +489,52 @@ export default function LoginPage({ onLoginSuccess }) {
       <div className={`w-full flex items-center justify-between px-6 pt-12 pb-6 z-10 transition-opacity duration-500 ${animateDrawer ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
         <Logo size="small" />
 
-        {/* Language Toggle Button */}
-        <button
-          type="button"
-          onClick={() => {
-            const nextLang = i18n.language === 'en' ? 'gu' : 'en';
-            i18n.changeLanguage(nextLang);
-            localStorage.setItem('language', nextLang);
-          }}
-          className="h-9 p-1 bg-white/10 hover:bg-white/15 border border-white/20 rounded-full flex items-center gap-2 text-white text-xs font-semibold cursor-pointer select-none transition-all duration-300"
-          title="Toggle Language"
-        >
-          {i18n.language === 'en' ? (
-            <>
-              {/* Circle 'en' on the left */}
-              <span className="w-7 h-7 rounded-full bg-white text-[#7338A0] flex items-center justify-center font-extrabold text-[10px] uppercase">
-                en
-              </span>
-              {/* Label 'English' on the right */}
-              <span className="pr-2.5">English</span>
-            </>
-          ) : (
-            <>
-              {/* Label 'ગુજરાતી' on the left */}
-              <span className="pl-2.5">ગુજરાતી</span>
-              {/* Circle 'ગુ' on the right */}
-              <span className="w-7 h-7 rounded-full bg-white text-[#7338A0] flex items-center justify-center font-extrabold text-[10px]">
-                ગુ
-              </span>
-            </>
-          )}
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Language Toggle Button */}
+          <button
+            type="button"
+            onClick={() => {
+              const nextLang = i18n.language === 'en' ? 'gu' : 'en';
+              i18n.changeLanguage(nextLang);
+              localStorage.setItem('language', nextLang);
+            }}
+            className="h-9 p-1 bg-white/10 hover:bg-white/15 border border-white/20 rounded-full flex items-center gap-2 text-white text-xs font-semibold cursor-pointer select-none transition-all duration-300"
+            title="Toggle Language"
+          >
+            {i18n.language === 'en' ? (
+              <>
+                {/* Circle 'en' on the left */}
+                <span className="w-7 h-7 rounded-full bg-white text-[#7338A0] flex items-center justify-center font-extrabold text-[10px] uppercase">
+                  en
+                </span>
+                {/* Label 'English' on the right */}
+                <span className="pr-2.5">English</span>
+              </>
+            ) : (
+              <>
+                {/* Label 'ગુજરાતી' on the left */}
+                <span className="pl-2.5">ગુજરાતી</span>
+                {/* Circle 'ગુ' on the right */}
+                <span className="w-7 h-7 rounded-full bg-white text-[#7338A0] flex items-center justify-center font-extrabold text-[10px]">
+                  ગુ
+                </span>
+              </>
+            )}
+          </button>
+
+          {/* Config / Server Settings Gear Button */}
+          <button
+            type="button"
+            onClick={() => setShowServerSettings(!showServerSettings)}
+            className={`w-9 h-9 bg-white/10 hover:bg-white/15 border border-white/20 rounded-full flex items-center justify-center text-white cursor-pointer select-none transition-all duration-300 hover-rotate-gear ${showServerSettings ? 'bg-white/25 border-white/40' : ''}`}
+            title="Server Settings"
+          >
+            <svg className="w-5 h-5 text-white transition-transform duration-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.43l-1.003.828c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.99l1.005.831a1.125 1.125 0 01.26 1.43l-1.297 2.247a1.125 1.125 0 01-1.37.491l-1.216-.456c-.356-.133-.751-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.43l1.004-.83c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.831a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Main Drawer Card */}
@@ -515,13 +572,37 @@ export default function LoginPage({ onLoginSuccess }) {
           </div>
         )}
 
+        {/* Server Setup Warning */}
+        {(!hasSavedConfig || isSettingsModified) && connectionStatus !== 'success' && (
+          <div className="mb-6 p-4 rounded-xl text-sm border bg-amber-50/60 dark:bg-amber-950/20 border-amber-100/50 dark:border-amber-900/30 text-amber-700 dark:text-amber-450 flex items-start gap-3 transition-all duration-300 text-left">
+            <svg className="w-5.5 h-5.5 flex-shrink-0 text-amber-600 dark:text-amber-500 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div className="flex-1">
+              <p className="font-bold">{t('server_settings_required') || 'Server Configuration Required'}</p>
+              <p className="text-xs text-amber-600/80 dark:text-amber-400/80 mt-1 leading-relaxed">
+                {t('server_settings_required_desc') || 'Please configure and verify the database server settings before signing in.'}
+              </p>
+              {!showServerSettings && (
+                <button
+                  type="button"
+                  onClick={() => setShowServerSettings(true)}
+                  className="mt-2 text-xs font-bold text-brand-red dark:text-red-400 hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  Configure Now →
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Login Form */}
         <form onSubmit={handleLogin} className="space-y-6 flex-1 flex flex-col justify-between">
           <div className="space-y-6">
 
             {/* Connection settings section */}
-            {!hasSavedConfig && (
-              <div className="bg-zinc-50 dark:bg-zinc-950/30 border border-zinc-100 dark:border-zinc-900 rounded-2xl p-5 space-y-5 mb-6 text-left transition-all duration-300">
+            <div className={`server-settings-slide ${showServerSettings ? 'show' : ''}`}>
+              <div className="bg-zinc-50 dark:bg-zinc-950/30 border border-zinc-100 dark:border-zinc-900 rounded-2xl p-5 space-y-5 text-left transition-all duration-300">
                 <div className="flex items-center gap-2 pb-2 border-b border-zinc-200/50 dark:border-zinc-800/50 mb-1 select-none">
                   <svg className="w-4 h-4 text-brand-red" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3V7.5a3 3 0 013-3h13.5a3 3 0 013 3v3.75a3 3 0 01-3 3zm-13.5 0a3 3 0 00-3 3v3.75a3 3 0 003 3h13.5a3 3 0 003-3v-3.75a3 3 0 00-3-3M6 7.5h.008v.008H6V7.5zM6 18h.008v.008H6V18z" />
@@ -558,7 +639,7 @@ export default function LoginPage({ onLoginSuccess }) {
                         onChange={(e) => setServerUrl(e.target.value)}
                         placeholder="e.g. demo.odoo.com"
                         className="w-full px-0 py-2 text-[15px] font-semibold text-zinc-900 dark:text-zinc-100 bg-transparent border-b border-zinc-200 dark:border-zinc-800 focus:outline-none focus:border-brand-red transition-all duration-200"
-                        required
+                        required={showServerSettings}
                         disabled={isLoading}
                       />
 
@@ -617,7 +698,7 @@ export default function LoginPage({ onLoginSuccess }) {
                   </p>
                 )}
               </div>
-            )}
+            </div>
 
             {/* Email / Username Input */}
             <div className="relative mb-6 text-left">
@@ -697,7 +778,7 @@ export default function LoginPage({ onLoginSuccess }) {
             {/* Sign In Button */}
             <button
               type="submit"
-              disabled={isLoading || !username || !password || (!hasSavedConfig && (connectionStatus !== 'success' || !selectedDb))}
+              disabled={isLoading || !username || !password || !isConnectionValid}
               className="w-full py-3.5 bg-brand-red hover:bg-brand-red-hover active:scale-[0.98] text-white font-bold rounded-xl transition-all duration-200 shadow-md shadow-brand-red/10 disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-[15px] cursor-pointer"
             >
               {isLoading ? (

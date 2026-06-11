@@ -21,7 +21,7 @@ const RefreshingIndicator = () => (
 )
 
 // CategoryImage sub-component to handle Odoo image load errors gracefully
-function CategoryImage({ src, name }) {
+export function CategoryImage({ src, name }) {
   const [hasError, setHasError] = useState(false)
   const getInitials = (n) => {
     if (!n) return '?'
@@ -91,7 +91,7 @@ function CategoryImage({ src, name }) {
   )
 }
 
-function getCategoryTheme(id, name) {
+export function getCategoryTheme(id, name) {
   const identifier = name || String(id || '');
   let hash = 0;
   for (let i = 0; i < identifier.length; i++) {
@@ -117,10 +117,23 @@ function getCategoryTheme(id, name) {
 export default function CategoriesPage({ user, onLogout }) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const { setPageLoading } = useOutletContext() || {}
+  const { setPageLoading, showSubcategoriesPopup } = useOutletContext() || {}
   const [categories, setCategories] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+
+  // Helper to determine parent ID of a category
+  const getParentId = useCallback((cat) => {
+    if (!cat.parent_id) return null
+    if (Array.isArray(cat.parent_id)) return cat.parent_id[0]
+    return cat.parent_id
+  }, [])
+
+  // Filter main list to show only parent categories (parent_id is falsy)
+  const parentCategories = categories.filter(cat => {
+    const pId = getParentId(cat)
+    return pId === null || pId === false
+  })
 
   useEffect(() => {
     if (setPageLoading) {
@@ -283,7 +296,7 @@ export default function CategoriesPage({ user, onLogout }) {
       )}
 
       {/* Categories Grid  */}
-      {!isLoading && categories.length > 0 && (
+      {!isLoading && parentCategories.length > 0 && (
         <section className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
           <style>{`
             .category-card {
@@ -308,15 +321,75 @@ export default function CategoriesPage({ user, onLogout }) {
             .dark .category-card-subtext {
               color: var(--cat-subtext-dark);
             }
+            @keyframes popup-expand {
+              0% {
+                transform: scale(0.93) translateY(8px);
+                opacity: 0;
+              }
+              100% {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+              }
+            }
+            @keyframes popup-shrink {
+              0% {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+              }
+              100% {
+                transform: scale(0.93) translateY(8px);
+                opacity: 0;
+              }
+            }
+            .popup-expand {
+              animation: popup-expand 0.22s cubic-bezier(0.34, 1.3, 0.64, 1) forwards;
+            }
+            .popup-shrink {
+              animation: popup-shrink 0.18s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            }
+            @keyframes backdrop-fade-in {
+              0% { opacity: 0; }
+              100% { opacity: 1; }
+            }
+            @keyframes backdrop-fade-out {
+              0% { opacity: 1; }
+              100% { opacity: 0; }
+            }
+            .backdrop-fade-in {
+              animation: backdrop-fade-in 0.22s ease-out forwards;
+            }
+            .backdrop-fade-out {
+              animation: backdrop-fade-out 0.18s ease-in forwards;
+            }
+            .custom-scrollbar::-webkit-scrollbar {
+              width: 5px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+              background: transparent;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: #e4e4e7;
+              border-radius: 9999px;
+            }
+            .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: #27272a;
+            }
           `}</style>
-          {categories.map((category) => {
+          {parentCategories.map((category) => {
             const theme = getCategoryTheme(category.id, category.name)
             return (
               <div
                 key={category.id}
                 id={`category-card-${category.id}`}
                 onClick={() => {
-                  navigate(`/products/${category.id}`, { state: { category } })
+                  const children = categories.filter(cat => getParentId(cat) === category.id)
+                  if (children.length > 0) {
+                    if (showSubcategoriesPopup) {
+                      showSubcategoriesPopup(category, children)
+                    }
+                  } else {
+                    navigate(`/products/${category.id}`, { state: { category } })
+                  }
                 }}
                 className="category-card flex items-center justify-between p-3.5 sm:p-5 rounded-2xl border hover:scale-[1.02] active:scale-[0.99] transition-all duration-300 group cursor-pointer select-none h-24 shadow-sm"
                 style={{
@@ -351,7 +424,7 @@ export default function CategoriesPage({ user, onLogout }) {
       )}
 
       {/* Empty State */}
-      {!isLoading && categories.length === 0 && !errorMsg && (
+      {!isLoading && parentCategories.length === 0 && !errorMsg && (
         <div className="flex-1 flex flex-col items-center justify-center text-center py-20 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-8">
           <div className="w-16 h-16 bg-purple-50 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-900/30 rounded-xl flex items-center justify-center text-purple-600 dark:text-purple-400 mb-4">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">

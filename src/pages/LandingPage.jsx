@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getApiBaseUrl, customFetch } from '../utils/api'
+import { CategoryImage, getCategoryTheme } from './CategoriesPage'
 
 
 export default function LandingPage({
@@ -24,6 +25,53 @@ export default function LandingPage({
   const [isLanguageUpdating, setIsLanguageUpdating] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
   const dropdownRef = useRef(null)
+
+  const [selectedParentCategory, setSelectedParentCategory] = useState(null)
+  const [childCategories, setChildCategories] = useState([])
+  const [isOpen, setIsOpen] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
+
+  const showSubcategoriesPopup = useCallback((parent, children) => {
+    setSelectedParentCategory(parent)
+    setChildCategories(children)
+    setIsOpen(true)
+    setIsClosing(false)
+  }, [])
+
+  const handleClosePopup = useCallback((callback) => {
+    setIsClosing(true)
+    setTimeout(() => {
+      setIsOpen(false)
+      setIsClosing(false)
+      setSelectedParentCategory(null)
+      setChildCategories([])
+      if (callback && typeof callback === 'function') {
+        callback()
+      }
+    }, 180)
+  }, [])
+
+  // Modal Escape key & Scroll lock
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        handleClosePopup()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, handleClosePopup])
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('overflow-hidden')
+    } else {
+      document.body.classList.remove('overflow-hidden')
+    }
+    return () => {
+      document.body.classList.remove('overflow-hidden')
+    }
+  }, [isOpen])
 
   const addToast = useCallback((message, type = 'success') => {
     const id = Date.now() + Math.random().toString(36).substring(2, 9)
@@ -129,6 +177,34 @@ export default function LandingPage({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const [prevPath, setPrevPath] = useState(location.pathname)
+  const [transitionClass, setTransitionClass] = useState('')
+
+  const getPathIndex = (path) => {
+    if (path === '/' || path.startsWith('/products/')) return 0
+    if (path === '/cart') return 1
+    if (path === '/user' || path === '/orders') return 2
+    return 0
+  }
+
+  useEffect(() => {
+    if (location.pathname === prevPath) return
+
+    const prevIdx = getPathIndex(prevPath)
+    const currentIdx = getPathIndex(location.pathname)
+
+    let direction = ''
+
+    if (currentIdx > prevIdx) {
+      direction = 'animate-slide-from-right'
+    } else if (currentIdx < prevIdx) {
+      direction = 'animate-slide-from-left'
+    }
+
+    setTransitionClass(direction)
+    setPrevPath(location.pathname)
+  }, [location.pathname, prevPath])
+
   const totalCartQty = cart.reduce((sum, item) => sum + item.quantity, 0)
   const currentPath = location.pathname
   const isHomeActive = currentPath === '/' || currentPath.startsWith('/products/')
@@ -136,16 +212,19 @@ export default function LandingPage({
   const isUserActive = currentPath === '/user' || currentPath === '/orders'
 
   const mainContent = (
-    <main className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 flex flex-col gap-6 overflow-y-auto">
-      <Outlet context={{
-        addToast,
-        editingOrder,
-        startEditingOrder,
-        discardEditingOrder,
-        saveEditedOrder: onSaveEditedOrder,
-        setPageLoading,
-        isLanguageUpdating
-      }} />
+    <main className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 flex flex-col gap-6 overflow-y-auto overflow-x-hidden">
+      <div key={location.pathname} className={`flex-1 flex flex-col gap-6 ${transitionClass}`}>
+        <Outlet context={{
+          addToast,
+          editingOrder,
+          startEditingOrder,
+          discardEditingOrder,
+          saveEditedOrder: onSaveEditedOrder,
+          setPageLoading,
+          isLanguageUpdating,
+          showSubcategoriesPopup
+        }} />
+      </div>
     </main>
   )
 
@@ -346,6 +425,7 @@ export default function LandingPage({
 
             {/* Home Tab */}
             <button
+              id="nav-tab-0"
               onClick={() => navigate('/')}
               className={`w-[33.33%] flex flex-col items-center gap-1.5 py-1 cursor-pointer transition-all duration-200 ${isHomeActive
                 ? 'text-brand-red dark:text-purple-400 scale-105'
@@ -361,6 +441,7 @@ export default function LandingPage({
 
             {/* Cart Tab */}
             <button
+              id="nav-tab-1"
               onClick={() => navigate('/cart')}
               className={`w-[33.33%] flex flex-col items-center gap-1.5 py-1 cursor-pointer transition-all duration-200 relative ${isCartActive
                 ? 'text-brand-red dark:text-purple-400 scale-105'
@@ -381,6 +462,7 @@ export default function LandingPage({
 
             {/* User Tab */}
             <button
+              id="nav-tab-2"
               onClick={() => navigate('/user')}
               className={`w-[33.33%] flex flex-col items-center gap-1.5 py-1 cursor-pointer transition-all duration-200 ${isUserActive
                 ? 'text-brand-red dark:text-purple-400 scale-105'
@@ -475,7 +557,76 @@ export default function LandingPage({
             </div>
           </div>
         </div>
-      )}      <style>{`
+      )}      {/* Subcategory Popup Modal (Binds whole landing page with absolute blur) */}
+      {isOpen && (
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              handleClosePopup()
+            }
+          }}
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-zinc-900/60 dark:bg-black/65 ${
+            isClosing ? 'backdrop-fade-out' : 'backdrop-fade-in'
+          }`}
+        >
+          <div 
+            className={`bg-zinc-50/95 dark:bg-zinc-900/95 border border-zinc-200/80 dark:border-zinc-800/80 rounded-3xl w-full max-w-md p-6 shadow-2xl relative flex flex-col max-h-[80vh] backdrop-blur-xl ${
+              isClosing ? 'popup-shrink' : 'popup-expand'
+            }`}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-zinc-200/50 dark:border-zinc-800/50">
+              <div className="text-left">
+                <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 leading-tight">
+                  {selectedParentCategory?.name || selectedParentCategory?.display_name}
+                </h3>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  {t('select_subcategory') || 'Select a Subcategory'}
+                </p>
+              </div>
+              <button 
+                onClick={() => handleClosePopup()}
+                className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-colors duration-200 focus:outline-none"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Body (Scrollable list of subcategories with separating lines) */}
+            <div className="flex-1 overflow-y-auto mt-4 pr-1 divide-y divide-zinc-200/50 dark:divide-zinc-800/50 custom-scrollbar">
+              {childCategories.map((child) => {
+                return (
+                  <div
+                    key={child.id}
+                    id={`child-category-card-${child.id}`}
+                    onClick={() => {
+                      handleClosePopup(() => {
+                        navigate(`/products/${child.id}`, { state: { category: child } })
+                      })
+                    }}
+                    className="flex items-center justify-between py-4 hover:bg-zinc-150/40 dark:hover:bg-zinc-800/20 px-2.5 rounded-2xl transition-all duration-200 group cursor-pointer select-none"
+                  >
+                    <div className="flex-1 pr-3 text-left">
+                      <h4 className="font-extrabold text-sm sm:text-base text-zinc-800 dark:text-zinc-200 group-hover:text-purple-650 dark:group-hover:text-purple-400 transition-colors duration-200">
+                        {child.name || child.display_name}
+                      </h4>
+                      <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-semibold mt-0.5">
+                        {t('browse_products') || 'Browse Products'}
+                      </p>
+                    </div>
+                    <div className="w-10 h-10 sm:w-11 sm:h-11 flex-shrink-0 flex items-center justify-center overflow-hidden bg-zinc-200/50 dark:bg-zinc-800/60 rounded-xl group-hover:scale-105 transition-transform duration-200">
+                      <CategoryImage src={child.image} name={child.name} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+      <style>{`
         @keyframes toastSlideIn {
           from {
             transform: translateY(1rem);
@@ -488,6 +639,85 @@ export default function LandingPage({
         }
         .animate-slide-in {
           animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes slideFromRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        @keyframes slideFromLeft {
+          from {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-from-right {
+          animation: slideFromRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-slide-from-left {
+          animation: slideFromLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes popup-expand {
+          0% {
+            transform: scale(0.93) translateY(8px);
+            opacity: 0;
+          }
+          100% {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+          }
+        }
+        @keyframes popup-shrink {
+          0% {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(0.93) translateY(8px);
+            opacity: 0;
+          }
+        }
+        .popup-expand {
+          animation: popup-expand 0.22s cubic-bezier(0.34, 1.3, 0.64, 1) forwards;
+        }
+        .popup-shrink {
+          animation: popup-shrink 0.18s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        @keyframes backdrop-fade-in {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+        @keyframes backdrop-fade-out {
+          0% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        .backdrop-fade-in {
+          animation: backdrop-fade-in 0.22s ease-out forwards;
+        }
+        .backdrop-fade-out {
+          animation: backdrop-fade-out 0.18s ease-in forwards;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #e4e4e7;
+          border-radius: 9999px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #27272a;
         }
       `}</style>
     </div>
