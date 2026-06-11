@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import { Capacitor } from '@capacitor/core'
 import { getApiBaseUrl, customFetch } from '../utils/api'
 import { CategoryImage, getCategoryTheme } from './CategoriesPage'
 
@@ -206,6 +207,65 @@ export default function LandingPage({
     setPrevPath(location.pathname)
   }, [location.pathname, prevPath])
 
+  // Touch swipe gesture navigation for Capacitor platforms
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+
+    let touchStartX = 0
+    let touchStartY = 0
+
+    const handleTouchStart = (e) => {
+      if (e.touches && e.touches.length > 0) {
+        touchStartX = e.touches[0].clientX
+        touchStartY = e.touches[0].clientY
+      }
+    }
+
+    const handleTouchEnd = (e) => {
+      if (!e.changedTouches || e.changedTouches.length === 0) return
+
+      // Skip if swipe originated from interactive inputs, links, or buttons
+      const target = e.target
+      if (target && typeof target.closest === 'function') {
+        if (target.closest('input, textarea, select, button, a, [role="button"]')) {
+          return
+        }
+      }
+
+      const touchEndX = e.changedTouches[0].clientX
+      const touchEndY = e.changedTouches[0].clientY
+
+      const diffX = touchEndX - touchStartX
+      const diffY = touchEndY - touchStartY
+
+      // Horizontal threshold: at least 75px, vertical threshold: at most 50px
+      if (Math.abs(diffX) > 75 && Math.abs(diffY) < 50) {
+        const currentIdx = getPathIndex(location.pathname)
+        const paths = ['/', '/cart', '/orders', '/user']
+
+        if (diffX > 0) {
+          // Swipe right (finger moves left to right) -> Navigate to previous tab
+          if (currentIdx > 0) {
+            navigate(paths[currentIdx - 1])
+          }
+        } else {
+          // Swipe left (finger moves right to left) -> Navigate to next tab
+          if (currentIdx < paths.length - 1) {
+            navigate(paths[currentIdx + 1])
+          }
+        }
+      }
+    }
+
+    window.addEventListener('touchstart', handleTouchStart, { passive: true })
+    window.addEventListener('touchend', handleTouchEnd, { passive: true })
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart)
+      window.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [location.pathname, navigate])
+
   const totalCartQty = cart.reduce((sum, item) => sum + item.quantity, 0)
   const currentPath = location.pathname
   const isHomeActive = currentPath === '/' || currentPath.startsWith('/products/')
@@ -231,17 +291,17 @@ export default function LandingPage({
   )
 
   return (
-    <div className="fixed inset-0 bg-zinc-50 dark:bg-[#0b0416] flex flex-col overflow-hidden transition-colors duration-300">
-      
+    <div className="fixed inset-0 bg-[#F5EEF7] dark:bg-[#05020a] flex flex-col overflow-hidden transition-colors duration-300">
+
       {/* Background Blur Blobs */}
       <div className="absolute top-[10%] left-[10%] w-[450px] h-[450px] rounded-full bg-brand-red/10 dark:bg-brand-red/5 blur-[120px] pointer-events-none select-none"></div>
       <div className="absolute bottom-[10%] right-[10%] w-[400px] h-[400px] rounded-full bg-brand-red/5 blur-[120px] pointer-events-none select-none"></div>
 
       {/* Main Container - Full height flexbox, overflow hidden */}
-      <div className="w-full h-full flex flex-col relative z-10 bg-white/70 dark:bg-[#0b0416]/20 backdrop-blur-md transition-colors duration-300 overflow-hidden">
-        
+      <div className="w-full h-full flex flex-col relative z-10 bg-white/40 dark:bg-[#301934]/20 backdrop-blur-md transition-colors duration-300 overflow-hidden">
+
         {/* Header - Fixed to top, will not scroll */}
-        <header className="flex-shrink-0 z-40 w-full bg-zinc-100/90 dark:bg-[#05020a]/90 backdrop-blur-md border-b border-purple-650/40 dark:border-purple-400/30 px-4 md:px-6 py-3 flex items-center justify-between transition-colors duration-300">
+        <header className="flex-shrink-0 z-40 w-full bg-zinc-100/80 dark:bg-[#05020a]/80 backdrop-blur-md border-b border-purple-650/40 dark:border-purple-400/30 px-4 md:px-6 py-3 flex items-center justify-between transition-colors duration-300">
           <div className="flex items-center gap-6">
             {/* Branding Logo */}
             <div className="flex items-center gap-1.5 cursor-pointer select-none" onClick={() => navigate('/')}>
@@ -422,7 +482,7 @@ export default function LandingPage({
         {mainContent}
 
         {/* Bottom Tab Bar (Visible on Mobile only, hidden on Desktop) */}
-        <nav className="flex-shrink-0 md:hidden bg-zinc-100/95 dark:bg-[#05020a]/95 border-t border-purple-650/40 dark:border-purple-400/30 pb-safe-bottom z-30 transition-colors duration-300">
+        <nav className="flex-shrink-0 md:hidden bg-zinc-100/80 dark:bg-[#05020a]/80 backdrop-blur-md border-t border-purple-650/40 dark:border-purple-400/30 pb-safe-bottom z-30 transition-colors duration-300">
           <div className="w-full max-w-md mx-auto flex items-center justify-between py-2.5 px-4">
 
             {/* Home Tab */}
@@ -575,20 +635,18 @@ export default function LandingPage({
         </div>
       )}      {/* Subcategory Popup Modal (Binds whole landing page with absolute blur) */}
       {isOpen && (
-        <div 
+        <div
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               handleClosePopup()
             }
           }}
-          className={`fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-zinc-900/60 dark:bg-black/65 ${
-            isClosing ? 'backdrop-fade-out' : 'backdrop-fade-in'
-          }`}
-        >
-          <div 
-            className={`bg-zinc-50/95 dark:bg-zinc-900/95 border border-zinc-200/80 dark:border-zinc-800/80 rounded-3xl w-full max-w-md p-6 shadow-2xl relative flex flex-col max-h-[80vh] backdrop-blur-xl ${
-              isClosing ? 'popup-shrink' : 'popup-expand'
+          className={`fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-zinc-900/60 dark:bg-black/65 ${isClosing ? 'backdrop-fade-out' : 'backdrop-fade-in'
             }`}
+        >
+          <div
+            className={`bg-zinc-50/95 dark:bg-zinc-900/95 border border-zinc-200/80 dark:border-zinc-800/80 rounded-3xl w-full max-w-md p-6 shadow-2xl relative flex flex-col max-h-[80vh] backdrop-blur-xl ${isClosing ? 'popup-shrink' : 'popup-expand'
+              }`}
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between pb-4 border-b border-zinc-200/50 dark:border-zinc-800/50">
@@ -600,7 +658,7 @@ export default function LandingPage({
                   {t('select_subcategory') || 'Select a Subcategory'}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => handleClosePopup()}
                 className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-colors duration-200 focus:outline-none"
               >
