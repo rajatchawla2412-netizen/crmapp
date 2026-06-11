@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useOutletContext } from 'react-router-dom'
 import { Capacitor } from '@capacitor/core'
 import { useTranslation } from 'react-i18next'
@@ -175,6 +175,33 @@ export default function ProductsPage({
   const [products, setProducts] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const [sortOption, setSortOption] = useState(null)
+  const [showSortPopup, setShowSortPopup] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false)
+
+  // Memoized filtered and sorted products
+  const filteredProducts = useMemo(() => {
+    let list = [...products]
+
+    // 1. Filter by search query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      list = list.filter(p => 
+        (p.name && p.name.toLowerCase().includes(q)) || 
+        (p.display_name && p.display_name.toLowerCase().includes(q))
+      )
+    }
+
+    // 2. Sort by price
+    if (sortOption === 'low-high') {
+      list.sort((a, b) => a.price - b.price)
+    } else if (sortOption === 'high-low') {
+      list.sort((a, b) => b.price - a.price)
+    }
+
+    return list
+  }, [products, searchQuery, sortOption])
 
   useEffect(() => {
     if (setPageLoading) {
@@ -326,6 +353,139 @@ export default function ProductsPage({
         </div>
       )}
 
+      {/* Controls Bar: Sort & Search */}
+      {!isLoading && products.length > 0 && (
+        <div className="flex items-center justify-between gap-4 py-2 border-b border-zinc-200/50 dark:border-zinc-800/40">
+          <div className="text-xs font-semibold text-zinc-400 dark:text-zinc-500">
+            {t('total_items') || 'Total Items'}: {filteredProducts.length}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {/* Search Input Button */}
+            <div className={`flex items-center bg-zinc-100/80 dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800 rounded-xl transition-all duration-300 overflow-hidden ${
+              isSearchExpanded ? 'w-48 sm:w-60 px-3.5 py-1.5' : 'w-10 h-10 justify-center'
+            }`}>
+              {isSearchExpanded ? (
+                <>
+                  <svg className="w-4 h-4 text-zinc-400 dark:text-zinc-500 flex-shrink-0 ml-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onBlur={() => {
+                      if (!searchQuery.trim()) {
+                        setIsSearchExpanded(false)
+                      }
+                    }}
+                    placeholder={t('search_products') || 'Search...'}
+                    className="flex-1 min-w-0 bg-transparent border-none outline-none text-xs font-semibold text-zinc-900 dark:text-zinc-100 pl-2 focus:ring-0 focus:outline-none"
+                    autoFocus
+                  />
+                  <button 
+                    onClick={() => {
+                      setSearchQuery('')
+                      setIsSearchExpanded(false)
+                    }}
+                    className="p-0.5 rounded-full hover:bg-zinc-200 dark:hover:bg-zinc-850 text-zinc-400 hover:text-zinc-650 transition-colors cursor-pointer"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsSearchExpanded(true)}
+                  className="w-full h-full flex items-center justify-center text-zinc-550 dark:text-zinc-400 hover:text-brand-red dark:hover:text-purple-400 transition-colors focus:outline-none cursor-pointer"
+                  title={t('search_products') || 'Search'}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.3" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            {/* Sort Dropdown Button */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowSortPopup(!showSortPopup)}
+                className={`w-10 h-10 border rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer ${
+                  sortOption 
+                    ? 'border-brand-red dark:border-purple-500 bg-brand-red/5 dark:bg-purple-950/10 text-brand-red dark:text-purple-450' 
+                    : 'border-zinc-200 dark:border-zinc-800 text-zinc-550 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900'
+                }`}
+                title={t('sort_products') || 'Sort'}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.3" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                </svg>
+              </button>
+
+              {/* Floating Sort Selection Dropdown */}
+              {showSortPopup && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowSortPopup(false)}></div>
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-850 rounded-xl shadow-xl z-50 animate-fade-in text-left overflow-hidden py-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSortOption('low-high')
+                        setShowSortPopup(false)
+                      }}
+                      className={`w-full px-4 py-2.5 text-xs font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-900 flex items-center justify-between cursor-pointer transition-colors ${
+                        sortOption === 'low-high' ? 'text-brand-red dark:text-purple-400' : 'text-zinc-700 dark:text-zinc-300'
+                      }`}
+                    >
+                      <span>{t('price_low_high') || 'Price: Low to High'}</span>
+                      {sortOption === 'low-high' && (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSortOption('high-low')
+                        setShowSortPopup(false)
+                      }}
+                      className={`w-full px-4 py-2.5 text-xs font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-900 flex items-center justify-between cursor-pointer transition-colors border-t border-zinc-100 dark:border-zinc-900 ${
+                        sortOption === 'high-low' ? 'text-brand-red dark:text-purple-400' : 'text-zinc-700 dark:text-zinc-300'
+                      }`}
+                    >
+                      <span>{t('price_high_low') || 'Price: High to Low'}</span>
+                      {sortOption === 'high-low' && (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      )}
+                    </button>
+                    
+                    {sortOption && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSortOption(null)
+                          setShowSortPopup(false)
+                        }}
+                        className="w-full px-4 py-2 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 border-t border-zinc-100 dark:border-zinc-900 flex items-center gap-1.5 cursor-pointer transition-colors"
+                      >
+                        <span>{t('clear_filter') || 'Clear Filter'}</span>
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Skeletons Loader */}
       {isLoading && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
@@ -347,15 +507,23 @@ export default function ProductsPage({
       )}
 
       {/* Products Grid list */}
+      {/* Empty State */}
       {!isLoading && products.length === 0 && !errorMsg && (
         <div className="p-12 bg-zinc-50/50 dark:bg-zinc-900/20 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl text-center text-sm text-zinc-550 dark:text-zinc-300 font-medium">
           {t('category_empty')}
         </div>
       )}
 
-      {!isLoading && products.length > 0 && (
+      {/* No search results State */}
+      {!isLoading && products.length > 0 && filteredProducts.length === 0 && !errorMsg && (
+        <div className="p-12 bg-zinc-50/50 dark:bg-zinc-900/20 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl text-center text-sm text-zinc-400 dark:text-zinc-500 font-semibold">
+          {t('no_search_results') || 'No products match your search query.'}
+        </div>
+      )}
+
+      {!isLoading && filteredProducts.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
-          {products.map(product => {
+          {filteredProducts.map(product => {
             const cartItem = cart.find(item => item.id === product.id)
             const cartQuantity = cartItem ? cartItem.quantity : 0
 

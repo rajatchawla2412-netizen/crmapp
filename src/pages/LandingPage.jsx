@@ -183,7 +183,8 @@ export default function LandingPage({
   const getPathIndex = (path) => {
     if (path === '/' || path.startsWith('/products/')) return 0
     if (path === '/cart') return 1
-    if (path === '/user' || path === '/orders') return 2
+    if (path === '/orders') return 2
+    if (path === '/user') return 3
     return 0
   }
 
@@ -209,7 +210,8 @@ export default function LandingPage({
   const currentPath = location.pathname
   const isHomeActive = currentPath === '/' || currentPath.startsWith('/products/')
   const isCartActive = currentPath === '/cart'
-  const isUserActive = currentPath === '/user' || currentPath === '/orders'
+  const isOrdersActive = currentPath === '/orders'
+  const isUserActive = currentPath === '/user'
 
   const mainContent = (
     <main className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-6 py-6 md:py-8 flex flex-col gap-6 overflow-y-auto overflow-x-hidden">
@@ -229,17 +231,17 @@ export default function LandingPage({
   )
 
   return (
-    <div className="fixed inset-0 bg-zinc-50 dark:bg-zinc-950 flex flex-col overflow-hidden transition-colors duration-300">
+    <div className="fixed inset-0 bg-zinc-50 dark:bg-[#0b0416] flex flex-col overflow-hidden transition-colors duration-300">
       
       {/* Background Blur Blobs */}
       <div className="absolute top-[10%] left-[10%] w-[450px] h-[450px] rounded-full bg-brand-red/10 dark:bg-brand-red/5 blur-[120px] pointer-events-none select-none"></div>
       <div className="absolute bottom-[10%] right-[10%] w-[400px] h-[400px] rounded-full bg-brand-red/5 blur-[120px] pointer-events-none select-none"></div>
 
       {/* Main Container - Full height flexbox, overflow hidden */}
-      <div className="w-full h-full flex flex-col relative z-10 bg-white/70 dark:bg-zinc-950/20 backdrop-blur-md transition-colors duration-300 overflow-hidden">
+      <div className="w-full h-full flex flex-col relative z-10 bg-white/70 dark:bg-[#0b0416]/20 backdrop-blur-md transition-colors duration-300 overflow-hidden">
         
         {/* Header - Fixed to top, will not scroll */}
-        <header className="flex-shrink-0 z-40 w-full bg-white/80 dark:bg-zinc-950/60 backdrop-blur-md border-b border-zinc-200/80 dark:border-zinc-800/50 px-4 md:px-6 py-4 flex items-center justify-between transition-colors duration-300">
+        <header className="flex-shrink-0 z-40 w-full bg-zinc-100/90 dark:bg-[#05020a]/90 backdrop-blur-md border-b border-purple-650/40 dark:border-purple-400/30 px-4 md:px-6 py-3 flex items-center justify-between transition-colors duration-300">
           <div className="flex items-center gap-6">
             {/* Branding Logo */}
             <div className="flex items-center gap-1.5 cursor-pointer select-none" onClick={() => navigate('/')}>
@@ -420,60 +422,74 @@ export default function LandingPage({
         {mainContent}
 
         {/* Bottom Tab Bar (Visible on Mobile only, hidden on Desktop) */}
-        <nav className="flex-shrink-0 md:hidden bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 pb-safe-bottom z-30 transition-colors duration-300">
-          <div className="w-full max-w-sm mx-auto flex items-center justify-between py-2.5 px-4">
+        <nav className="flex-shrink-0 md:hidden bg-zinc-100/95 dark:bg-[#05020a]/95 border-t border-purple-650/40 dark:border-purple-400/30 pb-safe-bottom z-30 transition-colors duration-300">
+          <div className="w-full max-w-md mx-auto flex items-center justify-between py-2.5 px-4">
 
             {/* Home Tab */}
             <button
               id="nav-tab-0"
               onClick={() => navigate('/')}
-              className={`w-[33.33%] flex flex-col items-center gap-1.5 py-1 cursor-pointer transition-all duration-200 ${isHomeActive
+              className={`w-[25%] flex flex-col items-center gap-1 py-1 cursor-pointer transition-all duration-200 ${isHomeActive
                 ? 'text-brand-red dark:text-purple-400 scale-105'
                 : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
                 }`}
             >
-              <svg className="w-5.5 h-5.5 transition-all duration-200" fill="none" stroke="currentColor" strokeWidth={isHomeActive ? "2.6" : "2"} viewBox="0 0 24 24">
+              <svg className="w-5 h-5 transition-all duration-200" fill="none" stroke="currentColor" strokeWidth={isHomeActive ? "2.6" : "2"} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
               </svg>
               <span className={`text-[10px] tracking-wide leading-none transition-all duration-200 ${isHomeActive ? 'font-bold' : 'font-medium'}`}>{t('home') || 'Home'}</span>
-              <span className={`w-1 h-1 rounded-full bg-brand-red dark:bg-purple-400 transition-all duration-200 mt-0.5 ${isHomeActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`} />
             </button>
 
             {/* Cart Tab */}
             <button
               id="nav-tab-1"
               onClick={() => navigate('/cart')}
-              className={`w-[33.33%] flex flex-col items-center gap-1.5 py-1 cursor-pointer transition-all duration-200 relative ${isCartActive
+              className={`w-[25%] flex flex-col items-center gap-1 py-1 cursor-pointer transition-all duration-200 relative ${isCartActive
                 ? 'text-brand-red dark:text-purple-400 scale-105'
                 : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
                 }`}
             >
-              <svg className="w-5.5 h-5.5 transition-all duration-200" fill="none" stroke="currentColor" strokeWidth={isCartActive ? "2.6" : "2"} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
-              </svg>
-              {totalCartQty > 0 && (
-                <span className="absolute -top-1 right-5 min-w-[15px] h-[15px] px-1 rounded-full bg-brand-red text-white text-[8px] font-extrabold flex items-center justify-center shadow-sm border border-white dark:border-zinc-950 animate-pulse z-20">
-                  {totalCartQty}
-                </span>
-              )}
+              <div className="relative">
+                <svg className="w-5 h-5 transition-all duration-200" fill="none" stroke="currentColor" strokeWidth={isCartActive ? "2.6" : "2"} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                </svg>
+                {totalCartQty > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] px-1 rounded-full bg-brand-red text-white text-[7.5px] font-extrabold flex items-center justify-center shadow-sm border border-white dark:border-zinc-950 animate-pulse z-20">
+                    {totalCartQty}
+                  </span>
+                )}
+              </div>
               <span className={`text-[10px] tracking-wide leading-none transition-all duration-200 ${isCartActive ? 'font-bold' : 'font-medium'}`}>{t('cart') || 'Cart'}</span>
-              <span className={`w-1 h-1 rounded-full bg-brand-red dark:bg-purple-400 transition-all duration-200 mt-0.5 ${isCartActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`} />
+            </button>
+
+            {/* Orders Tab */}
+            <button
+              id="nav-tab-2"
+              onClick={() => navigate('/orders')}
+              className={`w-[25%] flex flex-col items-center gap-1 py-1 cursor-pointer transition-all duration-200 ${isOrdersActive
+                ? 'text-brand-red dark:text-purple-400 scale-105'
+                : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
+                }`}
+            >
+              <svg className="w-5 h-5 transition-all duration-200" fill="none" stroke="currentColor" strokeWidth={isOrdersActive ? "2.6" : "2"} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+              <span className={`text-[10px] tracking-wide leading-none transition-all duration-200 ${isOrdersActive ? 'font-bold' : 'font-medium'}`}>{t('my_orders') || 'Orders'}</span>
             </button>
 
             {/* User Tab */}
             <button
-              id="nav-tab-2"
+              id="nav-tab-3"
               onClick={() => navigate('/user')}
-              className={`w-[33.33%] flex flex-col items-center gap-1.5 py-1 cursor-pointer transition-all duration-200 ${isUserActive
+              className={`w-[25%] flex flex-col items-center gap-1 py-1 cursor-pointer transition-all duration-200 ${isUserActive
                 ? 'text-brand-red dark:text-purple-400 scale-105'
                 : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-600 dark:hover:text-zinc-300'
                 }`}
             >
-              <svg className="w-5.5 h-5.5 transition-all duration-200" fill="none" stroke="currentColor" strokeWidth={isUserActive ? "2.6" : "2"} viewBox="0 0 24 24">
+              <svg className="w-5 h-5 transition-all duration-200" fill="none" stroke="currentColor" strokeWidth={isUserActive ? "2.6" : "2"} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
               </svg>
               <span className={`text-[10px] tracking-wide leading-none transition-all duration-200 ${isUserActive ? 'font-bold' : 'font-medium'}`}>{t('profile') || 'User'}</span>
-              <span className={`w-1 h-1 rounded-full bg-brand-red dark:bg-purple-400 transition-all duration-200 mt-0.5 ${isUserActive ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`} />
             </button>
           </div>
         </nav>
@@ -594,9 +610,10 @@ export default function LandingPage({
               </button>
             </div>
 
-            {/* Modal Body (Scrollable list of subcategories with separating lines) */}
-            <div className="flex-1 overflow-y-auto mt-4 pr-1 divide-y divide-zinc-200/50 dark:divide-zinc-800/50 custom-scrollbar">
+            {/* Modal Body (Scrollable grid/list of subcategories using category card design) */}
+            <div className="flex-1 overflow-y-auto mt-4 pr-1 space-y-3 custom-scrollbar">
               {childCategories.map((child) => {
+                const theme = getCategoryTheme(child.id, child.name)
                 return (
                   <div
                     key={child.id}
@@ -606,17 +623,27 @@ export default function LandingPage({
                         navigate(`/products/${child.id}`, { state: { category: child } })
                       })
                     }}
-                    className="flex items-center justify-between py-4 hover:bg-zinc-150/40 dark:hover:bg-zinc-800/20 px-2.5 rounded-2xl transition-all duration-200 group cursor-pointer select-none"
+                    className="category-card flex items-center justify-between p-3.5 sm:p-5 rounded-2xl border hover:scale-[1.02] active:scale-[0.99] transition-all duration-300 group cursor-pointer select-none h-20 shadow-sm"
+                    style={{
+                      '--cat-bg-light': theme.light.bg,
+                      '--cat-bg-dark': theme.dark.bg,
+                      '--cat-text-light': theme.light.text,
+                      '--cat-text-dark': theme.dark.text,
+                      '--cat-subtext-light': theme.light.subtext,
+                      '--cat-subtext-dark': theme.dark.subtext,
+                      '--cat-border-light': theme.light.border,
+                      '--cat-border-dark': theme.dark.border,
+                    }}
                   >
                     <div className="flex-1 pr-3 text-left">
-                      <h4 className="font-extrabold text-sm sm:text-base text-zinc-800 dark:text-zinc-200 group-hover:text-purple-650 dark:group-hover:text-purple-400 transition-colors duration-200">
+                      <h4 className="category-card-title font-extrabold text-sm sm:text-base tracking-tight leading-tight line-clamp-1">
                         {child.name || child.display_name}
                       </h4>
-                      <p className="text-[10px] text-zinc-400 dark:text-zinc-500 font-semibold mt-0.5">
+                      <p className="category-card-subtext text-[9px] sm:text-[10px] font-semibold mt-0.5 sm:mt-1">
                         {t('browse_products') || 'Browse Products'}
                       </p>
                     </div>
-                    <div className="w-10 h-10 sm:w-11 sm:h-11 flex-shrink-0 flex items-center justify-center overflow-hidden bg-zinc-200/50 dark:bg-zinc-800/60 rounded-xl group-hover:scale-105 transition-transform duration-200">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center overflow-hidden">
                       <CategoryImage src={child.image} name={child.name} />
                     </div>
                   </div>
@@ -627,6 +654,28 @@ export default function LandingPage({
         </div>
       )}
       <style>{`
+        .category-card {
+          background-color: var(--cat-bg-light);
+          color: var(--cat-text-light);
+          border-color: var(--cat-border-light);
+        }
+        .dark .category-card {
+          background-color: var(--cat-bg-dark);
+          color: var(--cat-text-dark);
+          border-color: var(--cat-border-dark);
+        }
+        .category-card-title {
+          color: var(--cat-text-light);
+        }
+        .dark .category-card-title {
+          color: var(--cat-text-dark);
+        }
+        .category-card-subtext {
+          color: var(--cat-subtext-light);
+        }
+        .dark .category-card-subtext {
+          color: var(--cat-subtext-dark);
+        }
         @keyframes toastSlideIn {
           from {
             transform: translateY(1rem);
